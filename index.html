@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<!--
+  Firstfruits · a stewardship & giving tool
+  ────────────────────────────────────────────
+  A single self-contained file. No build step, no dependencies, no server.
+  Open it in any browser, or host it anywhere static.
+  Nothing anyone enters is stored or transmitted — it lives only in the browser tab.
+
+  TO REBRAND FOR ANOTHER CHURCH OR CAMPAIGN:
+  Everything church-specific lives in the SETTINGS block at the top of the <script>
+  below — tool name, initiative name, commitment length and dates, and the wording
+  of the printed commitment card. Nothing below that block needs to be touched.
+  Colours and fonts are CSS custom properties on the <body> rule in the <style>.
+
+  Note: the one external request this page makes is to Google Fonts (for the display
+  typeface). To make it fully self-contained with zero external calls, remove the
+  @import line in the <style> and the page will fall back to system fonts.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firstfruits</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap');
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  --ink:#22312B; --pine:#2C4A40; --pine2:#3A5E51; --sage:#8FA89B; --leaf:#C9D6C6;
+  --wheat:#C49A4A; --wheat-soft:#E6D2A2; --slate:#6E8597; --clay:#A85638;
+  --teal:#2E9E9B; --teal-deep:#1F7C79;
+  --bg:#F3EFE6; --card:#FBF8F1; --line:#E6E0D2; --muted:#6F726A;
+  font-family:'Inter',system-ui,-apple-system,sans-serif; color:var(--ink);
+  background:radial-gradient(120% 80% at 50% -10%, #EFEADF 0%, var(--bg) 55%) fixed;
+  -webkit-font-smoothing:antialiased;
+}
+.shell{max-width:580px;margin:0 auto;padding:18px 16px 40px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
+.brand{display:flex;align-items:center;gap:11px}
+.mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--teal);box-shadow:0 7px 16px -9px rgba(46,158,155,.95);flex:none}
+.brandtext{display:flex;flex-direction:column;line-height:1}
+.bc{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+.wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:16px;letter-spacing:.2px;color:var(--pine)}
+.wordmark .amp{color:var(--wheat)}
+.reset{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;padding:6px}
+.reset:hover{color:var(--ink)}
+
+.thread{display:flex;gap:4px;margin-bottom:16px}
+.tick{flex:1;background:none;border:0;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;opacity:.55;text-align:left}
+.tick:disabled{cursor:default}
+.tick .dot{height:4px;width:100%;border-radius:99px;background:var(--line)}
+.tick .lbl{font-size:10px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.tick.on{opacity:1}.tick.done{opacity:.9}
+.tick.on .dot,.tick.done .dot{background:var(--pine)}
+.tick.on .lbl{color:var(--pine);font-weight:600}
+
+.stage{animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 24px;box-shadow:0 1px 0 #fff inset,0 14px 30px -24px rgba(33,48,43,.5)}
+
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--wheat);font-weight:600;margin:0 0 12px}
+h1{font-family:'Fraunces',serif;font-weight:500;font-size:29px;line-height:1.14;letter-spacing:-.01em;margin:0 0 20px;color:var(--ink)}
+h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:var(--ink)}
+.welcome .underline{display:block;width:240px;max-width:78%;height:13px;margin:-15px 0 18px}
+.welcome .lede{font-size:15.5px;line-height:1.62;color:#3c463f;margin:18px 0 16px}
+.reassure{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:9px}
+.reassure li{display:flex;align-items:center;gap:9px;font-size:14px;color:#3c463f}
+.reassure li svg{color:var(--pine);flex:none}
+
+.verse{margin:4px 0 18px;padding:14px 0 14px 18px;border-left:3px solid var(--wheat)}
+.verse p{font-family:'Fraunces',serif;font-style:italic;font-size:17px;line-height:1.5;margin:0 0 7px;color:var(--pine)}
+.verse cite{font-style:normal;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--wheat);font-weight:600}
+
+.stephead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.stepn{font-family:'Fraunces',serif;font-size:14px;color:var(--wheat);font-weight:600;letter-spacing:.1em}
+.help{font-size:14.5px;line-height:1.6;color:#3c463f;margin:0 0 20px}
+.aside{font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.5}
+
+.money{display:block;margin-bottom:14px}
+.money.small{margin-bottom:0}
+.mlabel{display:block;font-size:13px;font-weight:400;color:#475149;margin-bottom:6px}
+.minput{display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;background:#fff;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.minput:focus-within{border-color:var(--pine);box-shadow:0 0 0 3px rgba(44,74,64,.12)}
+.dollar{padding:0 4px 0 13px;color:var(--muted);font-size:15px}
+.minput input{flex:1;border:0;outline:0;background:none;font:inherit;font-size:16px;padding:11px 13px 11px 2px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.group{border:0;padding:0;margin:0 0 18px}
+.group legend{display:flex;align-items:baseline;gap:8px;padding:0;margin-bottom:11px}
+.group .gt{font-family:'Fraunces',serif;font-size:16px;color:var(--pine);font-weight:600}
+.group .gn{font-size:12px;color:var(--muted)}
+.gbody{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:14px}
+.fieldhelp{font-size:12.5px;line-height:1.55;color:var(--muted);margin:8px 0 0}
+
+/* Current giving gets its own weight — it is not one of three equal boxes */
+.givingfirst{background:#EEF3F2;border:1px solid #CFE1DE;border-left:4px solid var(--teal);border-radius:14px;padding:18px;margin-bottom:22px}
+.givingfirst legend{margin-bottom:9px}
+.givingfirst .gt{color:var(--teal-deep);font-size:17px}
+.givingfirst .gbody{background:#fff;border-color:#D6E4E2}
+.setasidehead{font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 4px}
+.setasidenote{font-size:13.5px;line-height:1.6;color:#3c463f;margin:0 0 18px}
+
+.lines{display:flex;flex-direction:column;gap:8px}
+.line{display:flex;align-items:center;gap:8px}
+.lname{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;font:inherit;font-size:14px;padding:10px 11px;color:var(--ink);outline:0}
+.lname:focus{border-color:var(--pine);box-shadow:0 0 0 3px rgba(44,74,64,.1)}
+.lmoney{display:flex;align-items:center;width:118px;border:1px solid var(--line);border-radius:9px;background:#fff;overflow:hidden}
+.lmoney:focus-within{border-color:var(--pine);box-shadow:0 0 0 3px rgba(44,74,64,.1)}
+.lmoney input{width:100%;border:0;outline:0;background:none;font:inherit;font-size:15px;padding:10px 10px 10px 2px;color:var(--ink);font-variant-numeric:tabular-nums}
+.lx{flex:none;display:grid;place-items:center;width:30px;height:30px;border:0;background:none;color:var(--muted);cursor:pointer;border-radius:8px}
+.lx:hover{color:var(--clay);background:#F2E7DF}
+.additem{margin-top:4px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:none;border:1px dashed var(--line);border-radius:9px;color:var(--pine);font:inherit;font-size:13px;font-weight:500;padding:9px 13px;cursor:pointer}
+.additem:hover{border-color:var(--pine);background:#F2F4EF}
+
+.check{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#39433d;line-height:1.45;margin:4px 0 6px;cursor:pointer}
+.check input{margin-top:2px;accent-color:var(--pine);width:16px;height:16px;flex:none}
+
+.bignum{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.bignum>div{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:15px 16px}
+.bignum .bl{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.bignum .bv{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
+.bignum .neg .bv{color:var(--clay)}
+
+.alloc{margin-bottom:22px}
+.bar{display:flex;height:20px;border-radius:7px;overflow:hidden;background:#EBE6D9;border:1px solid var(--line)}
+.seg{height:100%}.seg+.seg{box-shadow:-1px 0 0 rgba(255,255,255,.5)}
+.legend{list-style:none;padding:0;margin:13px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:13px;color:#39433d}
+.legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.legend b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+
+.ratios{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.ratio{text-align:center;padding:12px 4px;background:#FAF7EE;border:1px solid var(--line);border-radius:11px}
+.rv{display:block;font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
+.rl{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.rh{display:block;font-size:10.5px;color:var(--muted)}
+
+.callout{font-size:14px;line-height:1.6;border-radius:12px;padding:14px 16px;margin:0 0 22px}
+.callout.calm{background:#EEF2EC;border:1px solid #D7E0D2;color:#33473c}
+.callout.warn{background:#F8EEE7;border:1px solid #ECD8C9;color:#6e3a26}
+
+/* Current giving, carried forward */
+.carried{background:#EEF3F2;border:1px solid #D6E4E2;border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.carriedhead{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--teal-deep);margin:0 0 10px}
+.carriedhead svg{color:var(--teal)}
+.carriedrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13.5px;color:#33473c;padding:5px 0}
+.carriedrow b{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+.carriedrow.big b{font-family:'Fraunces',serif;font-size:19px;color:var(--teal-deep)}
+.carriednote{font-size:12.5px;line-height:1.5;color:var(--muted);margin:10px 0 0}
+.carried.empty p{font-size:13.5px;line-height:1.6;color:#33473c;margin:0}
+
+.explore{background:#FAF7EE;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.exprow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.exlabel{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.exval{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
+.permo{font-size:14px;color:var(--muted);margin-left:3px}
+.exhelp{font-size:12.5px;line-height:1.5;color:var(--muted);margin:0 0 12px}
+.explore input[type=range]{width:100%;accent-color:var(--pine);height:22px}
+
+.srclabel{font-size:13px;color:var(--muted);margin:0 0 9px}
+.source{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.srcbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font:inherit;font-size:13px;color:#39433d;cursor:pointer;transition:.15s}
+.srcbtn:hover{border-color:var(--teal)}
+.srcbtn.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:500}
+.fixrow{display:flex;flex-wrap:wrap;gap:8px;margin:-12px 0 18px}
+.srcbtn.fix{border-color:#E3CBB4;background:#fff}
+.srcbtn.fix:hover{border-color:var(--clay)}
+
+.impact{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.impactcell{background:#FAF7EE;border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center}
+.impactcell .iv{display:block;font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
+.impactcell .il{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3}
+.impactcell.neg .iv{color:var(--clay)}
+
+.tradeoff{background:#EEF3F2;border:1px solid #D6E4E2;border-radius:12px;padding:15px 16px;margin-bottom:18px}
+.tradeoff .ttitle{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--teal-deep);margin:0 0 8px}
+.tradeoff .ttitle svg{color:var(--teal)}
+.tradeoff p{font-size:14px;line-height:1.62;color:#33473c;margin:0}
+.tradeoff b{color:var(--ink)}
+
+.stored{background:#FAF7EE;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.storedhead{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--pine);margin:0 0 8px}
+.storedintro{font-size:13.5px;line-height:1.6;color:#3c463f;margin:0 0 14px}
+
+/* The commitment card, mirrored — layout follows the printed card closely */
+.mirror{background:#F7F3E9;border:1px solid var(--line);border-radius:10px;padding:22px 20px 20px;margin-bottom:14px}
+.cctitle{font-family:'Fraunces',serif;font-size:21px;font-weight:500;color:var(--ink);text-align:center;margin:0 0 22px;letter-spacing:-.01em}
+.ccrow{display:grid;grid-template-columns:30px minmax(0,190px) 1fr;align-items:center;gap:10px;margin-bottom:13px}
+.ccop{font-family:'Fraunces',serif;font-size:15px;font-weight:500;color:var(--ink);text-align:right;white-space:nowrap}
+.ccbox{background:#E9F0F0;border:1px solid var(--wheat);border-radius:2px;padding:10px 12px;font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;min-height:44px;display:flex;align-items:center;justify-content:flex-end}
+.cclbl{font-family:'Fraunces',serif;font-style:italic;font-size:12.5px;line-height:1.38;color:#3a443e}
+/* the elbow arrow: "x 2 years" */
+.ccarrow{display:flex;align-items:center;justify-content:flex-end;gap:9px;padding-right:148px;margin:-2px 0 2px}
+.ccx{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#3a443e;white-space:nowrap}
+.ccarrow svg{color:var(--wheat);flex:none}
+/* right-shifted zone: subtotal + stored resources share a right edge */
+.ccrow.right{grid-template-columns:1fr 30px minmax(0,190px)}
+.ccrow.right .ccop{text-align:right}
+.ccrow.right .cclbl{text-align:right}
+.mtotal{background:#2A332E;border-radius:4px;padding:18px 16px;margin-top:20px}
+.mtotal .mtl{font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#fff;margin:0 0 13px;text-align:center;line-height:1.25}
+.mtotalbox{display:grid;grid-template-columns:16px 1fr;align-items:center;gap:9px}
+.mtotalbox .ccop{color:#fff;font-size:16px}
+.mtotal .mtv{background:#E9F0F0;border:1px solid var(--wheat);border-radius:2px;padding:12px 14px;font-family:'Fraunces',serif;font-size:27px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;display:block}
+.mtotal .mtdate{font-family:'Fraunces',serif;font-size:14px;color:#E6DFCD;margin:13px 0 0;text-align:center}
+.mnote{font-size:11.5px;line-height:1.55;color:var(--muted);margin:0 0 18px;padding:0 2px}
+
+.sumgrid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.sumline{display:flex;justify-content:space-between;padding:12px 15px;background:var(--card);font-size:14px;color:#39433d}
+.sumline span:last-child{font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+.sumline.strong{background:#EEF2EC}
+.sumline.strong span{font-weight:600;color:var(--pine)}
+.sumline.first{background:#EEF3F2}
+.sumline.first span{font-weight:600;color:var(--teal-deep)}
+.consideredbox,.invites{margin-bottom:18px}
+.ctitle{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 10px}
+.ctitle svg{color:var(--wheat)}
+.invite{font-size:14px;line-height:1.6;color:#3c463f;background:#FAF7EE;border:1px solid var(--line);border-left:3px solid var(--sage);border-radius:0 10px 10px 0;padding:12px 15px;margin:0 0 9px}
+
+.nav,.sumactions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:26px}
+.cta{display:inline-flex;align-items:center;gap:7px;background:var(--pine);color:#fff;border:0;border-radius:11px;padding:13px 20px;font:inherit;font-size:15px;font-weight:500;cursor:pointer;transition:.15s;box-shadow:0 10px 18px -12px rgba(44,74,64,.9)}
+.cta:hover{background:var(--pine2)}
+.cta:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.ghost{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--muted);font:inherit;font-size:14.5px;cursor:pointer;padding:8px}
+.ghost:hover{color:var(--ink)}
+.welcome .cta{width:100%;justify-content:center;margin-top:4px}
+
+.foot{margin-top:22px;text-align:center}
+.brandtag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 12px}
+.privacy{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--teal-deep);font-weight:500;margin:0 0 5px}
+.disclaimer{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
+
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:4px}
+
+@media (max-width:440px){
+  h1{font-size:25px}
+  .card{padding:24px 18px}
+  .ratios{grid-template-columns:repeat(2,1fr)}
+  .legend{grid-template-columns:1fr}
+  .lmoney{width:104px}
+  .impact{grid-template-columns:1fr}
+  .mirror{padding:18px 14px 16px}
+  .cctitle{font-size:18px;margin-bottom:18px}
+  .ccrow{grid-template-columns:26px minmax(0,128px) 1fr;gap:8px;margin-bottom:11px}
+  .ccrow.right{grid-template-columns:1fr 26px minmax(0,128px)}
+  .ccbox{font-size:16px;padding:8px 10px;min-height:38px}
+  .cclbl{font-size:11px}
+  .ccarrow{padding-right:96px}
+  .ccarrow svg{width:76px;height:32px}
+  .mtotal .mtl{font-size:15px}
+  .mtotal .mtv{font-size:22px;padding:10px 11px}
+  .mtotal .mtdate{font-size:12.5px}
+}
+@media (prefers-reduced-motion:reduce){.stage{animation:none}.cta,.minput,.srcbtn{transition:none}}
+@media print{.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border-color:#ccc}.foot{margin-top:14px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+// ═══════════════════════════════════════════════════════════════════════════
+//  SETTINGS — everything a church would change is in this block.
+//  Nothing below this block needs editing to rebrand or re-date the tool.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// —— The tool itself ————————————————————————————————————————————————
+var TOOL_NAME    = "Firstfruits";
+var TOOL_EYEBROW = "A stewardship resource";   // small line above the wordmark
+
+// —— The giving initiative this is pointed at ——————————————————————————
+var INITIATIVE_NAME = "the Discipleship Initiative"; // used in headings and buttons
+
+// —— The commitment period ——————————————————————————————————————————
+var COMMIT_MONTHS = 25;                        // real length; all math uses this
+var COMMIT_WORDS  = "two-year";                // adjective: "a two-year commitment"
+var COMMIT_SPAN   = "two years";               // noun: "over the next two years"
+var COMMIT_RANGE  = "December 2026 – December 2028";
+
+// —— Wording on the printed commitment card ————————————————————————————
+//  These appear ONLY inside the on-screen facsimile of the card, so they should
+//  match the printed card word for word. The rest of the tool stays evergreen.
+var CARD_INITIATIVE       = "the FIRST initiative";
+var CARD_INITIATIVE_SHORT = "FIRST";
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  End of settings.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function usd(n){ return "$" + Math.round(Number(n)||0).toLocaleString("en-US"); }
+function plain(n){ return Math.round(Number(n)||0).toLocaleString("en-US"); }
+function pct(n){ return (Math.round((Number(n)||0)*1000)/10).toLocaleString("en-US") + "%"; }
+function num(v){ var n=parseFloat(String(v==null?"":v).replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; }
+var _id=0; function uid(){ return "i"+(++_id); }
+function safeDiv(a,b){ return b?a/b:0; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+function escA(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+function signed(n){ return n<0 ? "−"+usd(Math.abs(n)) : usd(n); }
+
+// ── Minimal inline icons ─────────────────────────────────────────────────────
+function icon(name,size){
+  var s=size||16, p={
+    chevR:'<path d="M9 6l6 6-6 6"/>', chevL:'<path d="M15 6l-6 6 6 6"/>',
+    check:'<path d="M20 6L9 17l-5-5"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+    x:'<path d="M6 6l12 12M18 6L6 18"/>', lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    printer:'<path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/>',
+    target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    heart:'<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>',
+    arrowD:'<path d="M12 5v14M19 12l-7 7-7-7"/>',
+    rotate:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'
+  }[name]||"";
+  return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+}
+
+// ── Seeds & state ─────────────────────────────────────────────────────────────
+function seedNeeds(){ return ["Housing (rent / mortgage)","Utilities & phone","Groceries","Transportation","Insurance","Minimum debt payments"].map(function(l){return {id:uid(),label:l,amount:""};}); }
+function seedExtras(){ return ["Dining out & coffee","Entertainment & subscriptions","Shopping & personal","Travel & recreation","Hobbies","Gifts"].map(function(l){return {id:uid(),label:l,amount:""};}); }
+function newLine(){ return {id:uid(),label:"",amount:""}; }
+function freshIncomes(){ return [{id:uid(),label:"Take-home pay",amount:""},{id:uid(),label:"Spouse take-home pay",amount:""}]; }
+
+var state = {
+  step:0,
+  incomes:freshIncomes(),
+  needs:seedNeeds(), extras:seedExtras(),
+  giving:"",            // current giving, monthly
+  savings:"",           // cash savings, monthly
+  retirement:"",        // post-paycheck retirement & investing, monthly
+  debt:false,
+  expanded:0,           // expanded monthly giving being explored
+  fund:"margin",        // margin | savings | extras
+  stored:"",            // one-time gifts from stored resources
+  _focusLast:null
+};
+
+function groupArr(g){ return g==="income"?state.incomes : g==="need"?state.needs : state.extras; }
+
+// ── Compute ───────────────────────────────────────────────────────────────────
+function computeM(){
+  function sum(a){ return a.reduce(function(s,it){return s+num(it.amount);},0); }
+  var income=sum(state.incomes), needsTotal=sum(state.needs), extrasTotal=sum(state.extras);
+  var give=num(state.giving), savingsCash=num(state.savings), retire=num(state.retirement);
+  var savingTotal=savingsCash+retire;
+  var allocated=needsTotal+extrasTotal+give+savingTotal;
+  return {income:income,needsTotal:needsTotal,extrasTotal:extrasTotal,give:give,
+    savingsCash:savingsCash,retire:retire,savingTotal:savingTotal,
+    allocated:allocated,margin:income-allocated};
+}
+
+// The commitment card's arithmetic, in one place.
+function commitmentMath(m){
+  var currentMo=m.give, expandedMo=state.expanded;
+  var currentYr=currentMo*12, expandedYr=expandedMo*12;
+  var annual=currentYr+expandedYr;
+  var period=(currentMo+expandedMo)*COMMIT_MONTHS;
+  var stored=num(state.stored);
+  return {currentMo:currentMo,expandedMo:expandedMo,currentYr:currentYr,expandedYr:expandedYr,
+    annual:annual,period:period,stored:stored,total:period+stored,
+    currentPeriod:currentMo*COMMIT_MONTHS, expandedPeriod:expandedMo*COMMIT_MONTHS};
+}
+
+function computeOutcome(m,fundOverride){
+  var amt=state.expanded, fund=fundOverride||state.fund;
+  if(amt<=0) return null;
+  if(fund==="savings"){
+    var fromS=Math.min(amt,m.savingsCash), ovS=amt-fromS;
+    return {kind:"savings",drawn:fromS,newSavings:m.savingsCash-fromS,overflow:ovS,newMargin:m.margin-ovS};
+  }
+  if(fund==="retirement"){
+    var fromR=Math.min(amt,m.retire), ovR=amt-fromR;
+    return {kind:"retirement",drawn:fromR,newRetire:m.retire-fromR,overflow:ovR,newMargin:m.margin-ovR};
+  }
+  if(fund==="extras"){
+    var fromE=Math.min(amt,m.extrasTotal), ovE=amt-fromE;
+    return {kind:"extras",drawn:fromE,newExtras:m.extrasTotal-fromE,overflow:ovE,newMargin:m.margin-ovE};
+  }
+  return {kind:"margin",newMargin:m.margin-amt};
+}
+
+// Which other funding sources would keep the month from going negative?
+function balancedAlternatives(m){
+  var opts=[{id:"margin",label:"your available",room:m.margin},
+            {id:"savings",label:"savings",room:m.savingsCash},
+            {id:"retirement",label:"retirement & investing",room:m.retire},
+            {id:"extras",label:"extras",room:m.extrasTotal}];
+  return opts.filter(function(op){
+    if(op.id===state.fund) return false;
+    var r=computeOutcome(m,op.id);
+    return r && r.newMargin>=0 && op.room>0;
+  });
+}
+
+// ── HTML fragments ────────────────────────────────────────────────────────────
+function stepHead(n,title){ return '<div class="stephead"><span class="stepn">'+n+'</span><h2>'+esc(title)+'</h2></div>'; }
+function verseHTML(ref,text){ return '<blockquote class="verse"><p>'+esc(text)+'</p><cite>'+esc(ref)+'</cite></blockquote>'; }
+function navHTML(backStep,nextStep,nextLabel,nextId,disabled){
+  return '<div class="nav no-print">'+
+    (backStep!=null?'<button class="ghost" data-action="go" data-step="'+backStep+'">'+icon("chevL",18)+' Back</button>':'<span></span>')+
+    '<button class="cta" data-action="go" data-step="'+nextStep+'"'+(nextId?' id="'+nextId+'"':'')+(disabled?' disabled':'')+'>'+esc(nextLabel)+' '+icon("chevR",18)+'</button>'+
+  '</div>';
+}
+function moneyFieldHTML(field,label,value){
+  return '<label class="money small"><span class="mlabel">'+esc(label)+'</span><span class="minput"><span class="dollar">$</span>'+
+    '<input class="moneyinput" inputmode="decimal" placeholder="0" data-field="'+field+'" value="'+escA(value)+'"></span></label>';
+}
+function lineItemsHTML(group,items,addLabel){
+  return '<div class="lines">'+items.map(function(it){
+    return '<div class="line">'+
+      '<input class="lname" placeholder="Item" data-field="line" data-group="'+group+'" data-key="label" data-id="'+it.id+'" value="'+escA(it.label)+'">'+
+      '<span class="lmoney"><span class="dollar">$</span><input class="moneyinput" inputmode="decimal" placeholder="0" data-field="line" data-group="'+group+'" data-key="amount" data-id="'+it.id+'" value="'+escA(it.amount)+'"></span>'+
+      '<button class="lx" data-action="remove-line" data-group="'+group+'" data-id="'+it.id+'" aria-label="Remove line">'+icon("x",15)+'</button>'+
+    '</div>';
+  }).join("")+
+  '<button class="additem" data-action="add-line" data-group="'+group+'">'+icon("plus",15)+' '+esc(addLabel)+'</button></div>';
+}
+function allocationHTML(m){
+  var base=Math.max(m.income,m.allocated,1);
+  var segs=[["Giving",m.give,"var(--teal)"],["Needs",m.needsTotal,"var(--pine)"],["Extras",m.extrasTotal,"var(--sage)"],["Saving & retirement",m.savingTotal,"var(--slate)"]];
+  if(m.margin>0) segs.push(["Available",m.margin,"var(--leaf)"]);
+  var shown=segs.filter(function(s){return s[1]>0;});
+  return '<div class="alloc"><div class="bar" role="img" aria-label="How a typical month is allocated">'+
+    shown.map(function(s){return '<div class="seg" style="width:'+((s[1]/base)*100)+'%;background:'+s[2]+'" title="'+escA(s[0]+": "+usd(s[1]))+'"></div>';}).join("")+
+    '</div><ul class="legend">'+shown.map(function(s){return '<li><span class="sw" style="background:'+s[2]+'"></span>'+esc(s[0])+'<b>'+usd(s[1])+'</b></li>';}).join("")+'</ul></div>';
+}
+function ratiosHTML(m){
+  function r(l,v,h){ return '<div class="ratio"><span class="rv">'+v+'</span><span class="rl">'+l+'</span><span class="rh">'+h+'</span></div>'; }
+  // Order follows the allocation bar above: giving, extras, saving, margin.
+  return '<div class="ratios">'+r("Giving",pct(safeDiv(m.give,m.income)),"of income")+r("Extras",pct(safeDiv(m.extrasTotal,m.income)),"of income")+r("Saving",pct(safeDiv(m.savingTotal,m.income)),"of income")+r("Available",pct(safeDiv(m.margin,m.income)),"of income")+'</div>';
+}
+
+// Current giving, carried forward across the commitment period.
+function carriedHTML(m){
+  if(m.give<=0){
+    return '<div class="carried empty"><p class="carriedhead">Your current giving</p>'+
+      '<p>You haven\u2019t entered any current giving yet. You can go back and add it \u2014 the commitment below builds on top of what you already give.</p></div>';
+  }
+  var c=commitmentMath(m);
+  return '<div class="carried"><p class="carriedhead">Your current giving</p>'+
+    '<div class="carriedrow"><span>Each month</span><b>'+usd(c.currentMo)+'</b></div>'+
+    '<div class="carriedrow"><span>Each year</span><b>'+usd(c.currentYr)+'</b></div>'+
+    '<div class="carriedrow big"><span>Across the '+esc(COMMIT_WORDS)+' '+esc(CARD_INITIATIVE_SHORT)+' commitment</span><b>'+usd(c.currentPeriod)+'</b></div>'+
+    '<p class="carriednote">This is what continuing exactly what you already give adds up to. It counts as part of your commitment, not separate from it.</p></div>';
+}
+
+function considerDynamicHTML(m){
+  if(state.expanded<=0) return "";
+  var sources=[{id:"margin",label:"From our margin"},{id:"savings",label:"From savings"},{id:"retirement",label:"From retirement"},{id:"extras",label:"Trim extras"}];
+  var out='<div class="srclabel">Where would this come from?</div><div class="source">'+
+    sources.map(function(s){return '<button class="srcbtn'+(state.fund===s.id?" on":"")+'" data-action="source" data-fund="'+s.id+'">'+esc(s.label)+'</button>';}).join("")+'</div>';
+  var o=computeOutcome(m), c=commitmentMath(m);
+  var marginAfter=o?o.newMargin:m.margin;
+  function cell(l,v,tone){ return '<div class="impactcell'+(tone?" "+tone:"")+'"><span class="iv">'+v+'</span><span class="il">'+esc(l)+'</span></div>'; }
+  out+='<div class="impact">'+
+    cell("Expanded giving, per year",usd(c.expandedYr))+
+    cell("Over "+COMMIT_MONTHS+" months",usd(c.expandedPeriod))+
+    cell("Monthly margin after",signed(marginAfter),marginAfter<0?"neg":"")+'</div>';
+
+  if(o&&o.kind==="savings"&&o.drawn>0){
+    out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on your savings</p>'+
+      '<p>Saving would go from <b>'+usd(m.savingsCash)+'</b> to <b>'+usd(o.newSavings)+'</b> a month \u2014 about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less set aside over the '+esc(COMMIT_WORDS)+' period. The same dollars, redirected. A real tradeoff worth holding prayerfully.</p></div>';
+  }
+  if(o&&o.kind==="extras"&&o.drawn>0){
+    out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on your extras</p>'+
+      '<p>Discretionary spending would go from <b>'+usd(m.extrasTotal)+'</b> to <b>'+usd(o.newExtras)+'</b> a month. For most households this is where the room actually is \u2014 subscriptions, delivery, the small things that crept up.</p></div>';
+  }
+  if(o&&o.kind==="retirement"&&o.drawn>0){
+    out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on retirement &amp; investing</p>'+
+      '<p>Contributions would go from <b>'+usd(m.retire)+'</b> to <b>'+usd(o.newRetire)+'</b> a month, about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less invested over the '+esc(COMMIT_WORDS)+' period. These dollars are the ones with the longest runway, so this is a heavier lever than the others. Worth weighing carefully, and worth a conversation with a planner if you\u2019re unsure.</p></div>';
+  }
+  if(o&&o.overflow>0){
+    var src=o.kind==="savings"?"savings":o.kind==="retirement"?"retirement contributions":"extras";
+    out+='<p class="callout calm">This is more than your current '+src+', so '+usd(o.overflow)+'/mo would also come from your margin.</p>';
+  }
+  if(o&&o.newMargin<0){
+    var alts=balancedAlternatives(m);
+    out+='<p class="callout warn">At this level a typical month spends more than it brings in. That doesn\u2019t make it wrong, but it\u2019s worth seeing plainly.';
+    if(alts.length){
+      var rooms=alts.map(function(a){ return usd(a.room)+"/mo in "+a.label; });
+      var roomText=rooms.length>1 ? rooms.slice(0,-1).join(", ")+" and "+rooms[rooms.length-1] : rooms[0];
+      out+=' You have '+roomText+'. Changing where this comes from <b>can</b> keep the month balanced.';
+    }
+    out+='</p>';
+    if(alts.length){
+      out+='<div class="fixrow">'+alts.map(function(a){
+        var lbl=a.id==="margin"?"Take it from our margin":a.id==="savings"?"Take it from savings":a.id==="retirement"?"Take it from retirement":"Take it from extras";
+        return '<button class="srcbtn fix" data-action="source" data-fund="'+a.id+'">'+esc(lbl)+'</button>';
+      }).join("")+'</div>';
+    }
+  }
+  return out;
+}
+
+// The commitment card, mirrored. Wording and layout follow the printed card
+// so someone can transcribe box for box.
+function mirrorHTML(m){
+  var c=commitmentMath(m);
+  function row(op,val,label){
+    return '<div class="ccrow"><span class="ccop">'+op+'</span>'+
+      '<span class="ccbox">'+val+'</span>'+
+      '<span class="cclbl">'+label+'</span></div>';
+  }
+  function rowRight(label,op,val){
+    return '<div class="ccrow right"><span class="cclbl">'+label+'</span>'+
+      '<span class="ccop">'+op+'</span><span class="ccbox">'+val+'</span></div>';
+  }
+  var elbow='<svg viewBox="0 0 104 40" width="104" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+    '<path d="M2 9 H92 V28"/><path d="M86.5 23 L92 30 L97.5 23"/></svg>';
+
+  return '<div class="mirror">'+
+    '<p class="cctitle">God, I acknowledge You first\u2026</p>'+
+    row("$",plain(c.currentYr),"What I/we would normally give in a year <span style=\"font-style:italic\">(regular giving, camp scholarships, mission trip sponsorships, etc.)</span>")+
+    row("+&thinsp;$",plain(c.expandedYr),"My/Our expanded annual generosity as part of "+esc(CARD_INITIATIVE))+
+    row("=&thinsp;$",plain(c.annual),'<span class="ccx">x 2 years</span>')+
+    '<div class="ccarrow">'+elbow+'</div>'+
+    rowRight("","$",plain(c.period))+
+    rowRight("Gifts from my/our stored resources","+&thinsp;$",plain(c.stored))+
+    '<div class="mtotal"><p class="mtl">My/Our total '+esc(COMMIT_WORDS)+' '+esc(CARD_INITIATIVE_SHORT)+' commitment</p>'+
+    '<div class="mtotalbox"><span class="ccop">$</span><span class="mtv">'+plain(c.total)+'</span></div>'+
+    '<p class="mtdate">'+esc(COMMIT_RANGE)+'</p></div>'+
+  '</div>'+
+  '<p class="mnote">These are the numbers you\u2019d write on your commitment card. One note on the arithmetic: the initiative runs '+COMMIT_MONTHS+' months, not 24 \u2014 December 2026 through December 2028 includes three Decembers. The figures above use the full '+COMMIT_MONTHS+' months, so they\u2019ll be slightly higher than multiplying a year by two.</p>';
+}
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
+function welcomeStep(){
+  return '<section class="card welcome">'+
+    '<p class="eyebrow">Know what God has given you to steward</p>'+
+    '<h1>A clear, honest look at your household finances.</h1>'+
+    '<svg class="underline" viewBox="0 0 240 14" fill="none" aria-hidden="true" preserveAspectRatio="none"><path d="M4 9 C 46 3, 92 12, 138 7 C 176 3, 210 10, 236 6" stroke="var(--wheat)" stroke-width="3.4" stroke-linecap="round"/></svg>'+
+    verseHTML("Proverbs 27:23","Know well the condition of your flocks, and give attention to your herds.")+
+    '<p class="lede">This tool maps your money line by line so you can see the whole picture, then weigh a giving commitment freely and with a clear heart. It ends with the numbers you\u2019d write on your commitment card.</p>'+
+    '<ul class="reassure"><li>'+icon("check",15)+' Add your own categories and amounts</li><li>'+icon("check",15)+' Nothing is saved or shared</li><li>'+icon("check",15)+' No number is ever decided for you</li></ul>'+
+    '<button class="cta" data-action="go" data-step="1">Begin '+icon("chevR",18)+'</button>'+
+  '</section>';
+}
+function incomeStep(){
+  var m=computeM();
+  return '<section class="card">'+stepHead("01","What comes in")+
+    '<p class="help">List your <strong>monthly take-home</strong> income \u2014 what actually lands in your accounts after taxes. Add a line for each source.</p>'+
+    lineItemsHTML("income",state.incomes,"Add income source")+
+    '<p class="aside">If income varies month to month, use a typical month.</p>'+
+    navHTML(null,2,"Next: spending","nextBtn",m.income<=0)+
+  '</section>';
+}
+function spendingStep(){
+  return '<section class="card">'+stepHead("02","Where it goes")+
+    '<p class="help">Edit, remove, or add lines so this matches your real life. Leave blanks where they don\u2019t apply.</p>'+
+    '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
+    '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Good things you choose</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
+    '<label class="check"><input type="checkbox" data-field="debt"'+(state.debt?" checked":"")+'> <span>We carry high-interest debt (like credit cards or payday loans).</span></label>'+
+    navHTML(1,3,"Next: giving & saving",null,false)+
+  '</section>';
+}
+function savingStep(){
+  return '<section class="card">'+stepHead("03","Setting aside on purpose")+
+    '<p class="help">Money you direct on purpose rather than spend. Let\u2019s start with giving. Everything else comes after it.</p>'+
+
+    '<fieldset class="group givingfirst"><legend><span class="gt">Current giving</span></legend><div class="gbody">'+
+    moneyFieldHTML("giving","What you give in a typical month",state.giving)+
+    '<p class="fieldhelp">Everything you already give \u2014 to the church and anywhere else. This is your starting point, not a separate bucket from what you\u2019ll consider later.</p>'+
+    '</div></fieldset>'+
+
+    '<p class="setasidehead">After acknowledging God first</p>'+
+    '<p class="setasidenote">Here\u2019s what else you\u2019re setting aside on purpose. These are good things \u2014 they\u2019re just not the first thing.</p>'+
+
+    '<fieldset class="group"><legend><span class="gt">Savings</span><span class="gn">Cash you set aside</span></legend><div class="gbody">'+
+    moneyFieldHTML("savings","Savings each month",state.savings)+
+    '<p class="fieldhelp">Emergency fund, general savings, money set aside for a down payment, a car, home repairs, or travel. Also any extra debt payments above the minimum.</p>'+
+    '</div></fieldset>'+
+
+    '<fieldset class="group"><legend><span class="gt">Retirement &amp; investing</span><span class="gn">After your paycheck lands</span></legend><div class="gbody">'+
+    moneyFieldHTML("retirement","Retirement & investing each month",state.retirement)+
+    '<p class="fieldhelp">Roth IRA, brokerage, 529, or HSA contributions you make yourself after your paycheck arrives. Don\u2019t include anything withheld from your paycheck \u2014 a workplace 401(k), payroll HSA, or insurance \u2014 that\u2019s already accounted for in your take-home pay.</p>'+
+    '</div></fieldset>'+
+
+    navHTML(2,4,"See your picture",null,false)+
+  '</section>';
+}
+function pictureStep(){
+  var m=computeM(), deficit=m.margin<0;
+  var callout=deficit?
+    '<p class="callout warn">A typical month spends more than it brings in right now. Worth looking at before taking on anything new \u2014 small shifts in the extras often close the gap.</p>':"";
+  return '<section class="card">'+stepHead("04","Your picture")+
+    '<p class="help">A typical month, counted honestly.</p>'+
+    '<div class="bignum"><div><span class="bl">Comes in</span><span class="bv">'+usd(m.income)+'</span></div>'+
+    '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Available")+'</span><span class="bv">'+signed(m.margin)+'</span></div></div>'+
+    allocationHTML(m)+ratiosHTML(m)+callout+
+    navHTML(3,5,"Consider "+INITIATIVE_NAME,null,false)+
+  '</section>';
+}
+function considerStep(){
+  var m=computeM();
+  var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);
+  return '<section class="card">'+stepHead("05","Consider "+INITIATIVE_NAME)+
+    verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
+    '<p class="help">What would it look like to acknowledge Jesus first in your finances over the next '+esc(COMMIT_SPAN)+'? Start from what you already give, then explore what expanding it could look like. There\u2019s no right answer here but the one you settle in your own heart.</p>'+
+
+    carriedHTML(m)+
+
+    '<div class="explore"><div class="exprow"><span class="exlabel">Expanded giving</span><span class="exval"><span id="exval">'+usd(state.expanded)+'</span><span class="permo">/mo</span></span></div>'+
+    '<p class="exhelp">On top of what you already give.</p>'+
+    '<input type="range" min="0" max="'+maxSlider+'" step="25" value="'+Math.min(state.expanded,maxSlider)+'" data-field="expanded" aria-label="Expanded monthly giving to explore"></div>'+
+
+    '<div id="considerDynamic">'+considerDynamicHTML(m)+'</div>'+
+
+    '<div class="stored"><p class="storedhead">Gifts from stored resources</p>'+
+    '<p class="storedintro">Beyond monthly giving, some households give from what they already hold \u2014 savings, stocks, a vehicle or boat that sits unused, property, or other assets. This is a one-time amount, given once or spread across the period, and it\u2019s entirely optional.</p>'+
+    moneyFieldHTML("stored","One-time gift from stored resources",state.stored)+'</div>'+
+
+    navHTML(4,6,"See summary",null,false)+
+  '</section>';
+}
+function summaryStep(){
+  var m=computeM(), c=commitmentMath(m), o=computeOutcome(m);
+  var newMargin=o?o.newMargin:m.margin;
+
+  var inv=[];
+  if(m.give<=0) inv.push("You haven\u2019t entered any current giving. If that\u2019s a season you\u2019re in, it\u2019s worth naming honestly \u2014 and it may be the very first place to start.");
+  if(m.margin<0) inv.push("Your typical month spends a little more than it brings in. Many find it freeing to revisit the extras first, so giving can come from rest rather than strain.");
+  if(state.debt) inv.push("With high-interest debt in the picture, it may be worth sitting down with a financial planner. Getting free of it is its own kind of stewardship \u2014 and it doesn\u2019t have to wait on generosity, or generosity on it.");
+  if(m.savingTotal<=0) inv.push("If it fits your season, you may want to consider setting something aside each month \u2014 a cushion is part of stewarding well for years to come.");
+  if(state.expanded>0&&state.fund==="savings") inv.push("Slowing savings in order to give is a real, prayerful tradeoff \u2014 neither choice is wrong. Hold it before the Lord and decide together with a settled heart.");
+  if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
+  if(c.stored>0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
+
+  function sl(l,v,cls){ return '<div class="sumline'+(cls?" "+cls:"")+'"><span>'+esc(l)+'</span><span>'+v+'</span></div>'; }
+
+  var out='<section class="card summary">'+stepHead("06","Your summary")+
+    '<div class="sumgrid">'+
+      sl("Current giving",usd(m.give),"first")+
+      sl("Monthly take-home",usd(m.income))+
+      sl("Needs",usd(m.needsTotal))+
+      sl("Extras",usd(m.extrasTotal))+
+      sl("Savings",usd(m.savingsCash))+
+      sl("Retirement & investing",usd(m.retire))+
+      sl("Monthly margin",signed(m.margin),"strong")+
+    '</div>';
+
+  if(state.expanded>0||c.stored>0){
+    var fromLabel = state.fund==="margin"?"Margin":state.fund==="savings"?"Savings":state.fund==="retirement"?"Retirement & investing":"Trimmed extras";
+    out+='<div class="consideredbox"><p class="ctitle">A commitment you\u2019re considering</p>'+
+      mirrorHTML(m)+
+      '<div class="sumgrid">'+
+        sl("Expanded giving, each month",usd(c.expandedMo))+
+        (state.expanded>0?sl("Coming from",esc(fromLabel)):"")+
+        sl("Monthly margin after",signed(newMargin),"strong")+
+      '</div></div>';
+  } else {
+    out+='<p class="callout calm">You haven\u2019t explored an expanded commitment yet. You can go back to the previous step at any time \u2014 or sit with these numbers first. There\u2019s no hurry.</p>';
+  }
+
+  if(inv.length){
+    out+='<div class="invites"><p class="ctitle">Things you may want to consider</p>'+inv.map(function(t){return '<p class="invite">'+esc(t)+'</p>';}).join("")+'</div>';
+  }
+  out+=verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
+    '<div class="sumactions no-print"><button class="ghost" data-action="go" data-step="5">'+icon("chevL",18)+' Back</button>'+
+    '<button class="cta" data-action="print">'+icon("printer",16)+' Print or save</button></div></section>';
+  return out;
+}
+
+function stageHTML(){
+  switch(state.step){
+    case 0: return welcomeStep();
+    case 1: return incomeStep();
+    case 2: return spendingStep();
+    case 3: return savingStep();
+    case 4: return pictureStep();
+    case 5: return considerStep();
+    case 6: return summaryStep();
+    default: return welcomeStep();
+  }
+}
+function brandHTML(){
+  return '<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M13.4 3h-2.8v6.6H4v2.8h6.6V21h2.8v-8.6H20V9.6h-6.6V3z" fill="#FBF8F1"/></svg></span>'+
+    '<span class="brandtext"><span class="bc">'+esc(TOOL_EYEBROW)+'</span><span class="wordmark">'+esc(TOOL_NAME)+'</span></span></div>';
+}
+function threadHTML(){
+  var labels=["Income","Spending","Giving &amp; saving","Picture","Consider","Summary"];
+  return '<nav class="thread no-print" aria-label="Progress">'+labels.map(function(label,i){
+    var idx=i+1, cls="tick"+(idx===state.step?" on":"")+(idx<state.step?" done":""), dis=idx>state.step?" disabled":"";
+    return '<button class="'+cls+'" data-action="go" data-step="'+idx+'"'+dis+'><span class="dot"></span><span class="lbl">'+label+'</span></button>';
+  }).join("")+'</nav>';
+}
+function shellHTML(){
+  return '<div class="shell">'+
+    '<header class="topbar no-print">'+brandHTML()+'<button class="reset" data-action="reset">'+icon("rotate",14)+' Start over</button></header>'+
+    (state.step>0?threadHTML():"")+
+    '<main class="stage">'+stageHTML()+'</main>'+
+    '<footer class="foot"><p class="brandtag">'+esc(TOOL_NAME)+'</p>'+
+    '<p class="privacy">'+icon("lock",13)+' Nothing you enter is saved or sent anywhere. Close this tab and it\u2019s gone.</p>'+
+    '<p class="disclaimer">For encouragement and education only \u2014 not financial, tax, or investment advice.</p></footer></div>';
+}
+
+// ── Render / update ────────────────────────────────────────────────────────────
+var $app=document.getElementById("app");
+function paint(opts){
+  opts=opts||{};
+  $app.innerHTML=shellHTML();
+  if(state._focusLast){ var ns=$app.querySelectorAll(state._focusLast); if(ns.length) ns[ns.length-1].focus(); state._focusLast=null; }
+  if(opts.scroll) window.scrollTo({top:0,behavior:"smooth"});
+}
+function go(step){ state.step=step; paint({scroll:true}); }
+function doReset(){
+  state.incomes=freshIncomes();
+  state.needs=seedNeeds(); state.extras=seedExtras();
+  state.giving=""; state.savings=""; state.retirement="";
+  state.debt=false; state.expanded=0; state.fund="margin"; state.stored=""; state.step=0;
+  paint({scroll:true});
+}
+function refreshConsider(){
+  var m=computeM();
+  var ev=document.getElementById("exval"); if(ev) ev.textContent=usd(state.expanded);
+  var cd=document.getElementById("considerDynamic"); if(cd) cd.innerHTML=considerDynamicHTML(m);
+}
+
+// ── Events (delegated) ──────────────────────────────────────────────────────────
+$app.addEventListener("click",function(e){
+  var a=e.target.closest("[data-action]"); if(!a) return;
+  var act=a.getAttribute("data-action");
+  if(act==="go"){ go(parseInt(a.getAttribute("data-step"),10)); }
+  else if(act==="reset"){ doReset(); }
+  else if(act==="print"){ window.print(); }
+  else if(act==="add-line"){ var g=a.getAttribute("data-group"); groupArr(g).push(newLine()); state._focusLast='[data-field="line"][data-group="'+g+'"][data-key="label"]'; paint(); }
+  else if(act==="remove-line"){ var gr=a.getAttribute("data-group"), id=a.getAttribute("data-id"); var arr=groupArr(gr); var i=arr.findIndex(function(x){return x.id===id;}); if(i>-1) arr.splice(i,1); paint(); }
+  else if(act==="source"){ state.fund=a.getAttribute("data-fund"); refreshConsider(); }
+});
+
+$app.addEventListener("input",function(e){
+  var t=e.target, f=t.getAttribute("data-field"); if(!f) return;
+  if(f==="expanded"){ state.expanded=num(t.value); refreshConsider(); return; }
+  if(f==="debt"){ state.debt=t.checked; return; }
+  if(t.classList.contains("moneyinput")){ var v=t.value.replace(/[^0-9.]/g,""); if(v!==t.value) t.value=v; }
+  if(f==="line"){
+    var arr=groupArr(t.getAttribute("data-group")); var it=arr.filter(function(x){return x.id===t.getAttribute("data-id");})[0];
+    if(it) it[t.getAttribute("data-key")]=t.value;
+    if(t.getAttribute("data-group")==="income"&&state.step===1){ var b=document.getElementById("nextBtn"); if(b) b.disabled=computeM().income<=0; }
+  }
+  else if(f==="giving"){ state.giving=t.value; }
+  else if(f==="savings"){ state.savings=t.value; }
+  else if(f==="retirement"){ state.retirement=t.value; }
+  else if(f==="stored"){ state.stored=t.value; }
+});
+
+// ── Boot ────────────────────────────────────────────────────────────────────────
+document.title = TOOL_NAME;
+paint();
+</script>
+</body>
+</html>
