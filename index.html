@@ -41,8 +41,8 @@ body{
 .brand{display:flex;align-items:center;gap:11px}
 .mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--teal);box-shadow:0 7px 16px -9px rgba(46,158,155,.95);flex:none}
 .brandtext{display:flex;flex-direction:column;line-height:1}
-.bc{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
-.wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:16px;letter-spacing:.2px;color:var(--pine)}
+.bc{font-size:10.5px;letter-spacing:.03em;color:var(--muted);font-weight:500;margin-top:5px}
+.wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:17px;letter-spacing:.2px;color:var(--pine)}
 .wordmark .amp{color:var(--wheat)}
 .reset{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;padding:6px}
 .reset:hover{color:var(--ink)}
@@ -268,7 +268,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
 
 // —— The tool itself ————————————————————————————————————————————————
 var TOOL_NAME    = "Firstfruits";
-var TOOL_EYEBROW = "A stewardship resource";   // small line above the wordmark
+var TOOL_TAGLINE = "A Stewardship Resource";   // sits under the wordmark
 
 // —— The giving initiative this is pointed at ——————————————————————————
 var INITIATIVE_NAME = "the Discipleship Initiative"; // used in headings and buttons
@@ -674,7 +674,7 @@ function stageHTML(){
 }
 function brandHTML(){
   return '<div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M13.4 3h-2.8v6.6H4v2.8h6.6V21h2.8v-8.6H20V9.6h-6.6V3z" fill="#FBF8F1"/></svg></span>'+
-    '<span class="brandtext"><span class="bc">'+esc(TOOL_EYEBROW)+'</span><span class="wordmark">'+esc(TOOL_NAME)+'</span></span></div>';
+    '<span class="brandtext"><span class="wordmark">'+esc(TOOL_NAME)+'</span><span class="bc">'+esc(TOOL_TAGLINE)+'</span></span></div>';
 }
 function threadHTML(){
   var labels=["Income","Spending","Giving &amp; saving","Picture","Consider","Summary"];
