@@ -99,8 +99,6 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .givingfirst legend{margin-bottom:9px}
 .givingfirst .gt{color:var(--teal-deep);font-size:17px}
 .givingfirst .gbody{background:#fff;border-color:#D6E4E2}
-.setasidehead{font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 4px}
-.setasidenote{font-size:13.5px;line-height:1.6;color:#3c463f;margin:0 0 18px}
 
 .lines{display:flex;flex-direction:column;gap:8px}
 .line{display:flex;align-items:center;gap:8px}
@@ -541,29 +539,34 @@ function incomeStep(){
     '<p class="help">List your <strong>monthly take-home</strong> income \u2014 what actually lands in your accounts after taxes. Add a line for each source.</p>'+
     lineItemsHTML("income",state.incomes,"Add income source")+
     '<p class="aside">If income varies month to month, use a typical month.</p>'+
-    navHTML(null,2,"Next: spending","nextBtn",m.income<=0)+
+    navHTML(null,2,"Next: giving","nextBtn",m.income<=0)+
   '</section>';
 }
 function spendingStep(){
-  return '<section class="card">'+stepHead("02","Where it goes")+
+  return '<section class="card">'+stepHead("03","Where it goes")+
     '<p class="help">Edit, remove, or add lines so this matches your real life. Leave blanks where they don\u2019t apply.</p>'+
     '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
     '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Good things you choose</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
     '<label class="check"><input type="checkbox" data-field="debt"'+(state.debt?" checked":"")+'> <span>We carry high-interest debt (like credit cards or payday loans).</span></label>'+
-    navHTML(1,3,"Next: giving & saving",null,false)+
+    navHTML(2,4,"Next: saving",null,false)+
   '</section>';
 }
-function savingStep(){
-  return '<section class="card">'+stepHead("03","Setting aside on purpose")+
-    '<p class="help">Money you direct on purpose rather than spend. Let\u2019s start with giving. Everything else comes after it.</p>'+
+function givingStep(){
+  return '<section class="card">'+stepHead("02","Acknowledging God first")+
+    verseHTML("Proverbs 3:9","Honor the LORD with your wealth and with the firstfruits of all your produce.")+
+    '<p class="help">Let\u2019s start with what you already give. Everything else comes after that.</p>'+
 
     '<fieldset class="group givingfirst"><legend><span class="gt">Current giving</span></legend><div class="gbody">'+
     moneyFieldHTML("giving","What you give in a typical month",state.giving)+
-    '<p class="fieldhelp">Everything you already give \u2014 to the church and anywhere else. This is your starting point, not a separate bucket from what you\u2019ll consider later.</p>'+
+    '<p class="fieldhelp">Everything you already give, to the church and anywhere else. This is your starting point.</p>'+
     '</div></fieldset>'+
 
-    '<p class="setasidehead">After acknowledging God first</p>'+
-    '<p class="setasidenote">Here\u2019s what else you\u2019re setting aside on purpose. These are good things \u2014 they\u2019re just not the first thing.</p>'+
+    navHTML(1,3,"Next: spending",null,false)+
+  '</section>';
+}
+function savingStep(){
+  return '<section class="card">'+stepHead("04","Setting aside on purpose")+
+    '<p class="help">The rest of what you direct on purpose rather than spend. Giving is already named, so this is everything else.</p>'+
 
     '<fieldset class="group"><legend><span class="gt">Savings</span><span class="gn">Cash you set aside</span></legend><div class="gbody">'+
     moneyFieldHTML("savings","Savings each month",state.savings)+
@@ -572,28 +575,28 @@ function savingStep(){
 
     '<fieldset class="group"><legend><span class="gt">Retirement &amp; investing</span><span class="gn">After your paycheck lands</span></legend><div class="gbody">'+
     moneyFieldHTML("retirement","Retirement & investing each month",state.retirement)+
-    '<p class="fieldhelp">Roth IRA, brokerage, 529, or HSA contributions you make yourself after your paycheck arrives. Don\u2019t include anything withheld from your paycheck \u2014 a workplace 401(k), payroll HSA, or insurance \u2014 that\u2019s already accounted for in your take-home pay.</p>'+
+    '<p class="fieldhelp">Roth IRA, brokerage, 529, or HSA contributions you make yourself after your paycheck arrives. Don\u2019t include anything withheld from your paycheck, like a workplace 401(k), payroll HSA, or insurance. That\u2019s already accounted for in your take-home pay.</p>'+
     '</div></fieldset>'+
 
-    navHTML(2,4,"See your picture",null,false)+
+    navHTML(3,5,"See your picture",null,false)+
   '</section>';
 }
 function pictureStep(){
   var m=computeM(), deficit=m.margin<0;
   var callout=deficit?
     '<p class="callout warn">A typical month spends more than it brings in right now. Worth looking at before taking on anything new \u2014 small shifts in the extras often close the gap.</p>':"";
-  return '<section class="card">'+stepHead("04","Your picture")+
+  return '<section class="card">'+stepHead("05","Your picture")+
     '<p class="help">A typical month, counted honestly.</p>'+
     '<div class="bignum"><div><span class="bl">Comes in</span><span class="bv">'+usd(m.income)+'</span></div>'+
     '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Available")+'</span><span class="bv">'+signed(m.margin)+'</span></div></div>'+
     allocationHTML(m)+ratiosHTML(m)+callout+
-    navHTML(3,5,"Consider "+INITIATIVE_NAME,null,false)+
+    navHTML(4,6,"Consider "+INITIATIVE_NAME,null,false)+
   '</section>';
 }
 function considerStep(){
   var m=computeM();
   var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);
-  return '<section class="card">'+stepHead("05","Consider "+INITIATIVE_NAME)+
+  return '<section class="card">'+stepHead("06","Consider "+INITIATIVE_NAME)+
     verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
     '<p class="help">What would it look like to acknowledge Jesus first in your finances over the next '+esc(COMMIT_SPAN)+'? Start from what you already give, then explore what expanding it could look like. There\u2019s no right answer here but the one you settle in your own heart.</p>'+
 
@@ -609,7 +612,7 @@ function considerStep(){
     '<p class="storedintro">Beyond monthly giving, some households give from what they already hold \u2014 savings, stocks, a vehicle or boat that sits unused, property, or other assets. This is a one-time amount, given once or spread across the period, and it\u2019s entirely optional.</p>'+
     moneyFieldHTML("stored","One-time gift from stored resources",state.stored)+'</div>'+
 
-    navHTML(4,6,"See summary",null,false)+
+    navHTML(5,7,"See summary",null,false)+
   '</section>';
 }
 function summaryStep(){
@@ -627,7 +630,7 @@ function summaryStep(){
 
   function sl(l,v,cls){ return '<div class="sumline'+(cls?" "+cls:"")+'"><span>'+esc(l)+'</span><span>'+v+'</span></div>'; }
 
-  var out='<section class="card summary">'+stepHead("06","Your summary")+
+  var out='<section class="card summary">'+stepHead("07","Your summary")+
     '<div class="sumgrid">'+
       sl("Current giving",usd(m.give),"first")+
       sl("Monthly take-home",usd(m.income))+
@@ -655,7 +658,7 @@ function summaryStep(){
     out+='<div class="invites"><p class="ctitle">Things you may want to consider</p>'+inv.map(function(t){return '<p class="invite">'+esc(t)+'</p>';}).join("")+'</div>';
   }
   out+=verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
-    '<div class="sumactions no-print"><button class="ghost" data-action="go" data-step="5">'+icon("chevL",18)+' Back</button>'+
+    '<div class="sumactions no-print"><button class="ghost" data-action="go" data-step="6">'+icon("chevL",18)+' Back</button>'+
     '<button class="cta" data-action="print">'+icon("printer",16)+' Print or save</button></div></section>';
   return out;
 }
@@ -664,11 +667,12 @@ function stageHTML(){
   switch(state.step){
     case 0: return welcomeStep();
     case 1: return incomeStep();
-    case 2: return spendingStep();
-    case 3: return savingStep();
-    case 4: return pictureStep();
-    case 5: return considerStep();
-    case 6: return summaryStep();
+    case 2: return givingStep();
+    case 3: return spendingStep();
+    case 4: return savingStep();
+    case 5: return pictureStep();
+    case 6: return considerStep();
+    case 7: return summaryStep();
     default: return welcomeStep();
   }
 }
@@ -677,7 +681,7 @@ function brandHTML(){
     '<span class="brandtext"><span class="wordmark">'+esc(TOOL_NAME)+'</span><span class="bc">'+esc(TOOL_TAGLINE)+'</span></span></div>';
 }
 function threadHTML(){
-  var labels=["Income","Spending","Giving &amp; saving","Picture","Consider","Summary"];
+  var labels=["Income","Giving","Spending","Saving","Picture","Consider","Summary"];
   return '<nav class="thread no-print" aria-label="Progress">'+labels.map(function(label,i){
     var idx=i+1, cls="tick"+(idx===state.step?" on":"")+(idx<state.step?" done":""), dis=idx>state.step?" disabled":"";
     return '<button class="'+cls+'" data-action="go" data-step="'+idx+'"'+dis+'><span class="dot"></span><span class="lbl">'+label+'</span></button>';
