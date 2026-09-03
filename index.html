@@ -93,6 +93,7 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .group .gn{font-size:12px;color:var(--muted)}
 .gbody{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:14px}
 .fieldhelp{font-size:12.5px;line-height:1.55;color:var(--muted);margin:8px 0 0}
+.grouphelp{font-size:12.5px;line-height:1.55;color:var(--muted);margin:0 0 12px;padding-bottom:11px;border-bottom:1px solid var(--line)}
 
 /* Current giving gets its own weight — it is not one of three equal boxes */
 .givingfirst{background:#EEF3F2;border:1px solid #CFE1DE;border-left:4px solid var(--teal);border-radius:14px;padding:18px;margin-bottom:22px}
@@ -379,7 +380,7 @@ function computeOutcome(m,fundOverride){
 
 // Which other funding sources would keep the month from going negative?
 function balancedAlternatives(m){
-  var opts=[{id:"margin",label:"your available",room:m.margin},
+  var opts=[{id:"margin",label:"your margin",room:m.margin},
             {id:"savings",label:"savings",room:m.savingsCash},
             {id:"retirement",label:"retirement & investing",room:m.retire},
             {id:"extras",label:"extras",room:m.extrasTotal}];
@@ -416,7 +417,7 @@ function lineItemsHTML(group,items,addLabel){
 function allocationHTML(m){
   var base=Math.max(m.income,m.allocated,1);
   var segs=[["Giving",m.give,"var(--teal)"],["Needs",m.needsTotal,"var(--pine)"],["Extras",m.extrasTotal,"var(--sage)"],["Saving & retirement",m.savingTotal,"var(--slate)"]];
-  if(m.margin>0) segs.push(["Available",m.margin,"var(--leaf)"]);
+  if(m.margin>0) segs.push(["Margin",m.margin,"var(--leaf)"]);
   var shown=segs.filter(function(s){return s[1]>0;});
   return '<div class="alloc"><div class="bar" role="img" aria-label="How a typical month is allocated">'+
     shown.map(function(s){return '<div class="seg" style="width:'+((s[1]/base)*100)+'%;background:'+s[2]+'" title="'+escA(s[0]+": "+usd(s[1]))+'"></div>';}).join("")+
@@ -425,7 +426,7 @@ function allocationHTML(m){
 function ratiosHTML(m){
   function r(l,v,h){ return '<div class="ratio"><span class="rv">'+v+'</span><span class="rl">'+l+'</span><span class="rh">'+h+'</span></div>'; }
   // Order follows the allocation bar above: giving, extras, saving, margin.
-  return '<div class="ratios">'+r("Giving",pct(safeDiv(m.give,m.income)),"of income")+r("Extras",pct(safeDiv(m.extrasTotal,m.income)),"of income")+r("Saving",pct(safeDiv(m.savingTotal,m.income)),"of income")+r("Available",pct(safeDiv(m.margin,m.income)),"of income")+'</div>';
+  return '<div class="ratios">'+r("Giving",pct(safeDiv(m.give,m.income)),"of take-home")+r("Extras",pct(safeDiv(m.extrasTotal,m.income)),"of take-home")+r("Saving",pct(safeDiv(m.savingTotal,m.income)),"of take-home")+r("Margin",pct(safeDiv(m.margin,m.income)),"of take-home")+'</div>';
 }
 
 // Current giving, carried forward across the commitment period.
@@ -544,8 +545,10 @@ function incomeStep(){
 }
 function spendingStep(){
   return '<section class="card">'+stepHead("03","Where it goes")+
-    '<p class="help">Edit, remove, or add lines so this matches your real life. Leave blanks where they don\u2019t apply.</p>'+
-    '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
+    '<p class="help">Edit, remove, or add lines so this matches your real life. Include only what leaves your account after payday. Leave blanks where they don\u2019t apply.</p>'+
+    '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+
+    '<p class="grouphelp">If your health, dental, or life insurance comes out of your paycheck before you see it, leave it out. It\u2019s already reflected in your take-home pay. Insurance you pay yourself, like auto or homeowners, belongs here.</p>'+
+    lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
     '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Good things you choose</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
     '<label class="check"><input type="checkbox" data-field="debt"'+(state.debt?" checked":"")+'> <span>We carry high-interest debt (like credit cards or payday loans).</span></label>'+
     navHTML(2,4,"Next: saving",null,false)+
@@ -587,8 +590,8 @@ function pictureStep(){
     '<p class="callout warn">A typical month spends more than it brings in right now. Worth looking at before taking on anything new \u2014 small shifts in the extras often close the gap.</p>':"";
   return '<section class="card">'+stepHead("05","Your picture")+
     '<p class="help">A typical month, counted honestly.</p>'+
-    '<div class="bignum"><div><span class="bl">Comes in</span><span class="bv">'+usd(m.income)+'</span></div>'+
-    '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Available")+'</span><span class="bv">'+signed(m.margin)+'</span></div></div>'+
+    '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(m.income)+'</span></div>'+
+    '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(m.margin)+'</span></div></div>'+
     allocationHTML(m)+ratiosHTML(m)+callout+
     navHTML(4,6,"Consider "+INITIATIVE_NAME,null,false)+
   '</section>';
@@ -598,7 +601,7 @@ function considerStep(){
   var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);
   return '<section class="card">'+stepHead("06","Consider "+INITIATIVE_NAME)+
     verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
-    '<p class="help">What would it look like to acknowledge Jesus first in your finances over the next '+esc(COMMIT_SPAN)+'? Start from what you already give, then explore what expanding it could look like. There\u2019s no right answer here but the one you settle in your own heart.</p>'+
+    '<p class="help">What would it look like to acknowledge Jesus first in your finances over the next '+esc(COMMIT_SPAN)+'? Start from what you already give, then explore what expanding it could look like. This will look different for everyone.</p>'+
 
     carriedHTML(m)+
 
