@@ -217,6 +217,9 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .sumline.first span{font-weight:600;color:var(--teal-deep)}
 .sumline.sub{padding:9px 15px 9px 28px;background:#F5F9F8}
 .sumline.sub span{font-weight:400;color:var(--muted);font-size:13px}
+.sumline span .prev{color:var(--muted);font-weight:400;font-size:13px}
+.sumnote{font-size:12.5px;line-height:1.55;color:var(--muted);margin:-6px 0 18px;padding:0 2px}
+.cardintro{font-size:13.5px;line-height:1.6;color:#3c463f;margin:18px 0 12px}
 .consideredbox,.invites{margin-bottom:18px}
 .ctitle{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 10px}
 .ctitle svg{color:var(--wheat)}
@@ -257,7 +260,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   .mtotal .mtdate{font-size:12.5px}
 }
 @media (prefers-reduced-motion:reduce){.stage{animation:none}.cta,.minput,.srcbtn{transition:none}}
-@media print{.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border-color:#ccc}.foot{margin-top:14px}}
+@media print{.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border-color:#ccc}.foot{margin-top:14px}.pagebreak{break-before:page;page-break-before:always}}
 </style>
 </head>
 <body>
@@ -644,9 +647,38 @@ function considerStep(){
     navHTML(5,7,"See summary",null,false)+
   '</section>';
 }
+// The picture again, with the commitment applied. Same shape as computeM()
+// so the allocation bar and ratios can render it unchanged.
+function adjustedM(m){
+  var o=computeOutcome(m), exp=state.expanded;
+  var adj={
+    income:m.income, needsTotal:m.needsTotal,
+    extrasTotal:(o&&o.kind==="extras")?o.newExtras:m.extrasTotal,
+    give:m.give+exp, giveChurch:m.giveChurch+exp, giveOther:m.giveOther,
+    savingsCash:(o&&o.kind==="savings")?o.newSavings:m.savingsCash,
+    retire:(o&&o.kind==="retirement")?o.newRetire:m.retire
+  };
+  adj.savingTotal=adj.savingsCash+adj.retire;
+  adj.allocated=adj.needsTotal+adj.extrasTotal+adj.give+adj.savingTotal;
+  adj.margin=adj.income-adj.allocated;
+  return adj;
+}
+
 function summaryStep(){
-  var m=computeM(), c=commitmentMath(m), o=computeOutcome(m);
-  var newMargin=o?o.newMargin:m.margin;
+  var m=computeM(), c=commitmentMath(m);
+  var changed=state.expanded>0;
+  var adj=changed?adjustedM(m):m;
+  var deficit=adj.margin<0;
+
+  function sl(l,v,cls){ return '<div class="sumline'+(cls?" "+cls:"")+'"><span>'+esc(l)+'</span><span>'+v+'</span></div>'; }
+  // Shows "before → after" only on the lines the commitment actually moved.
+  function slc(l,was,now,cls,fmt){
+    fmt=fmt||usd;
+    var v=(changed&&Math.round(was)!==Math.round(now))
+      ? '<span class="prev">'+fmt(was)+' \u2192</span> '+fmt(now)
+      : fmt(now);
+    return '<div class="sumline'+(cls?" "+cls:"")+'"><span>'+esc(l)+'</span><span>'+v+'</span></div>';
+  }
 
   var inv=[];
   if(m.give<=0) inv.push("You haven\u2019t entered any current giving. If that\u2019s a season you\u2019re in, it\u2019s worth naming honestly \u2014 and it may be the very first place to start.");
@@ -658,29 +690,50 @@ function summaryStep(){
   if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
   if(c.stored>0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
 
-  function sl(l,v,cls){ return '<div class="sumline'+(cls?" "+cls:"")+'"><span>'+esc(l)+'</span><span>'+v+'</span></div>'; }
-
+  // ── Part one: the picture, adjusted ──────────────────────────────────────
   var out='<section class="card summary">'+stepHead("07","Your summary")+
-    '<div class="sumgrid">'+
-      sl("Total current giving",usd(m.give),"first")+
-      (m.giveOther>0?sl("Our church",usd(m.giveChurch),"sub")+sl("Beyond our church",usd(m.giveOther),"sub"):"")+
+    '<p class="help">'+(changed
+      ? 'A typical month, with the commitment you\u2019re considering.'
+      : 'A typical month, counted honestly.')+'</p>'+
+    '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(adj.income)+'</span></div>'+
+    '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(adj.margin)+'</span></div></div>'+
+    allocationHTML(adj)+ratiosHTML(adj);
+
+  out+='<div class="sumgrid">'+
+      slc("Total giving",m.give,adj.give,"first")+
+      (m.giveOther>0?slc("To "+CHURCH_NAME,m.giveChurch,adj.giveChurch,"sub")+sl("Beyond our church",usd(m.giveOther),"sub"):"")+
       sl("Monthly take-home",usd(m.income))+
       sl("Needs",usd(m.needsTotal))+
-      sl("Extras",usd(m.extrasTotal))+
-      sl("Savings",usd(m.savingsCash))+
-      sl("Retirement & investing",usd(m.retire))+
-      sl("Monthly margin",signed(m.margin),"strong")+
+      slc("Extras",m.extrasTotal,adj.extrasTotal)+
+      slc("Savings",m.savingsCash,adj.savingsCash)+
+      slc("Retirement & investing",m.retire,adj.retire)+
+      slc("Monthly margin",m.margin,adj.margin,"strong",signed)+
     '</div>';
 
+  if(changed){
+    var fromText=state.fund==="margin"?"comes out of your margin"
+      :state.fund==="savings"?"comes out of your savings"
+      :state.fund==="retirement"?"comes out of retirement & investing"
+      :"comes from trimming extras";
+    out+='<p class="sumnote">The arrows show what changed. Your expanded giving of '+usd(state.expanded)+' a month '+fromText+'.</p>';
+  }
+
+  // ── Part two: the commitment, plainly, then the card ─────────────────────
   if(state.expanded>0||c.stored>0){
-    var fromLabel = state.fund==="margin"?"Margin":state.fund==="savings"?"Savings":state.fund==="retirement"?"Retirement & investing":"Trimmed extras";
-    out+='<div class="consideredbox"><p class="ctitle">A commitment you\u2019re considering</p>'+
-      mirrorHTML(m)+
+    out+='<div class="pagebreak"></div>'+
+      '<div class="consideredbox"><p class="ctitle">'+icon("heart",15)+' The commitment you\u2019re considering</p>'+
       '<div class="sumgrid">'+
-        sl("Expanded giving, each month",usd(c.expandedMo))+
-        (state.expanded>0?sl("Coming from",esc(fromLabel)):"")+
-        sl("Monthly margin after",signed(newMargin),"strong")+
-      '</div></div>';
+        sl("Current giving to "+CHURCH_NAME+", each month",usd(c.currentMo))+
+        sl("Expanded giving, each month","+ "+usd(c.expandedMo))+
+        sl("Giving to "+CHURCH_NAME+", each month",usd(c.currentMo+c.expandedMo),"first")+
+        sl("Each year",usd(c.annual))+
+        sl("Across the "+COMMIT_MONTHS+" months of "+CARD_INITIATIVE,usd(c.period))+
+        (c.stored>0?sl("One-time gift from stored resources","+ "+usd(c.stored)):"")+
+        sl("Total "+COMMIT_WORDS+" "+CARD_INITIATIVE_SHORT+" commitment",usd(c.total),"strong")+
+      '</div>'+
+      '<p class="cardintro">At Commitment Sunday you\u2019ll be given a card that looks like this. These are your numbers for it \u2014 box for box, in the same order.</p>'+
+      mirrorHTML(m)+
+      '</div>';
   } else {
     out+='<p class="callout calm">You haven\u2019t explored an expanded commitment yet. You can go back to the previous step at any time \u2014 or sit with these numbers first. There\u2019s no hurry.</p>';
   }
