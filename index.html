@@ -131,10 +131,11 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
 .legend b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
 
+.ratiocap{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
 .ratios{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
 .ratio{text-align:center;padding:12px 4px;background:#FAF7EE;border:1px solid var(--line);border-radius:11px}
 .rv{display:block;font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
-.rl{display:block;font-size:12px;font-weight:600;margin-top:2px}
+.rl{display:block;font-size:12px;font-weight:600;margin-top:4px}
 .rh{display:block;font-size:10.5px;color:var(--muted)}
 
 .callout{font-size:14px;line-height:1.6;border-radius:12px;padding:14px 16px;margin:0 0 22px}
@@ -293,6 +294,7 @@ var CARD_INITIATIVE_SHORT = "FIRST";
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+function initiativeBare(){ return INITIATIVE_NAME.replace(/^the\s+/i,""); }
 function usd(n){ return "$" + Math.round(Number(n)||0).toLocaleString("en-US"); }
 function plain(n){ return Math.round(Number(n)||0).toLocaleString("en-US"); }
 function pct(n){ return (Math.round((Number(n)||0)*1000)/10).toLocaleString("en-US") + "%"; }
@@ -432,9 +434,9 @@ function allocationHTML(m){
     '</div><ul class="legend">'+shown.map(function(s){return '<li><span class="sw" style="background:'+s[2]+'"></span>'+esc(s[0])+'<b>'+usd(s[1])+'</b></li>';}).join("")+'</ul></div>';
 }
 function ratiosHTML(m){
-  function r(l,v,h){ return '<div class="ratio"><span class="rv">'+v+'</span><span class="rl">'+l+'</span><span class="rh">'+h+'</span></div>'; }
+  function r(l,v){ return '<div class="ratio"><span class="rv">'+v+'</span><span class="rl">'+l+'</span></div>'; }
   // Order follows the allocation bar above: giving, extras, saving, margin.
-  return '<div class="ratios">'+r("Total giving",pct(safeDiv(m.give,m.income)),"of take-home")+r("Extras",pct(safeDiv(m.extrasTotal,m.income)),"of take-home")+r("Saving",pct(safeDiv(m.savingTotal,m.income)),"of take-home")+r("Margin",pct(safeDiv(m.margin,m.income)),"of take-home")+'</div>';
+  return '<p class="ratiocap">Share of take-home pay</p><div class="ratios">'+r("Total giving",pct(safeDiv(m.give,m.income)))+r("Extras",pct(safeDiv(m.extrasTotal,m.income)))+r("Saving",pct(safeDiv(m.savingTotal,m.income)))+r("Margin",pct(safeDiv(m.margin,m.income)))+'</div>';
 }
 
 // Current giving, carried forward across the commitment period.
@@ -454,7 +456,7 @@ function carriedHTML(m){
     '<div class="carriedrow"><span>Each year</span><b>'+usd(c.currentYr)+'</b></div>'+
     '<div class="carriedrow big"><span>Across the '+esc(COMMIT_WORDS)+' '+esc(CARD_INITIATIVE_SHORT)+' commitment</span><b>'+usd(c.currentPeriod)+'</b></div>'+
     '<p class="carriednote">This is what continuing exactly what you already give adds up to. It counts as part of your commitment, not separate from it.</p>'+
-    (m.giveOther>0?'<p class="carriednote">You also give <b>'+usd(m.giveOther)+'</b> a month beyond the church. It\u2019s counted in your full picture, just not in this commitment.</p>':"")+
+    (m.giveOther>0?'<p class="carriednote">You also give <b>'+usd(m.giveOther)+'</b> a month beyond the church. It\u2019s counted in your full picture, just not in this '+esc(initiativeBare())+' commitment.</p>':"")+
     '</div>';
 }
 
