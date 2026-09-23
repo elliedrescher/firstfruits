@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v23)
+  Firstfruits · a stewardship & giving tool  (v25)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -569,7 +569,7 @@ function spendingStep(){
     '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+
     '<p class="grouphelp">If your health, dental, or life insurance comes out of your paycheck before you see it, leave it out. It\u2019s already reflected in your take-home pay. Insurance you pay yourself, like auto or homeowners, belongs here.</p>'+
     lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
-    '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Good things you choose</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
+    '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Things you enjoy but can live without</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
     '<label class="check"><input type="checkbox" data-field="debt"'+(state.debt?" checked":"")+'> <span>We carry high-interest debt (like credit cards or payday loans).</span></label>'+
     navHTML(2,4,"Next: saving",null,false)+
   '</section>';
@@ -584,12 +584,12 @@ function givingStep(){
 
     '<div class="subfield">'+
     moneyFieldHTML("givingChurch","To "+CHURCH_NAME,state.givingChurch)+
-    '<p class="fieldhelp">Everything that goes to '+esc(CHURCH_NAME)+' \u2014 regular giving, plus things like camp scholarships or mission trip sponsorships.</p>'+
+    '<p class="fieldhelp">Everything that goes to '+esc(CHURCH_NAME)+': regular giving, plus things like camp scholarships or Compassion sponsorships.</p>'+
     '</div>'+
 
     '<div class="subfield">'+
     moneyFieldHTML("givingOther","Beyond our church",state.givingOther)+
-    '<p class="fieldhelp">Everything else you give: other churches, missionaries, ministries, Christian schools, and any other charitable or nonprofit giving.</p>'+
+    '<p class="fieldhelp">Everything else you give: other nonprofits, missionaries, ministries, Christian schools, and any other charitable giving.</p>'+
     '</div>'+
     '</div></fieldset>'+
 
@@ -618,7 +618,7 @@ function pictureStep(){
   var callout=deficit?
     '<p class="callout warn">A typical month spends more than it brings in right now. Worth looking at before taking on anything new \u2014 small shifts in the extras often close the gap.</p>':"";
   return '<section class="card">'+stepHead("05","Your picture")+
-    '<p class="help">A typical month, counted honestly.</p>'+
+    '<p class="help">A realistic look at a typical month.</p>'+
     '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(m.income)+'</span></div>'+
     '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(m.margin)+'</span></div></div>'+
     allocationHTML(m)+ratiosHTML(m)+callout+
@@ -694,7 +694,7 @@ function summaryStep(){
   var out='<section class="card summary">'+stepHead("07","Your summary")+
     '<p class="help">'+(changed
       ? 'A typical month, with the commitment you\u2019re considering.'
-      : 'A typical month, counted honestly.')+'</p>'+
+      : 'A realistic look at a typical month.')+'</p>'+
     '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(adj.income)+'</span></div>'+
     '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(adj.margin)+'</span></div></div>'+
     allocationHTML(adj)+ratiosHTML(adj);
