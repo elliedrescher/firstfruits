@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v25)
+  Firstfruits · a stewardship & giving tool  (v27)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -219,7 +219,7 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .sumline.sub span{font-weight:400;color:var(--muted);font-size:13px}
 .sumline span .prev{color:var(--muted);font-weight:400;font-size:13px}
 .sumnote{font-size:12.5px;line-height:1.55;color:var(--muted);margin:-6px 0 18px;padding:0 2px}
-.cardintro{font-size:13.5px;line-height:1.6;color:#3c463f;margin:18px 0 12px}
+.cardintro{font-size:13.5px;line-height:1.6;color:#3c463f;margin:0 0 12px}
 .consideredbox,.invites{margin-bottom:18px}
 .ctitle{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 10px}
 .ctitle svg{color:var(--wheat)}
@@ -281,7 +281,7 @@ var INITIATIVE_NAME = "the Discipleship Initiative"; // used in headings and but
 var CHURCH_NAME     = "Biltmore Church";             // the church the commitment is made to
 
 // —— The commitment period ——————————————————————————————————————————
-var COMMIT_MONTHS = 25;                        // real length; all math uses this
+var COMMIT_MONTHS = 24;                        // all math uses this (the giving window itself runs 25 months; the extra month is catch-up room)
 var COMMIT_WORDS  = "two-year";                // adjective: "a two-year commitment"
 var COMMIT_SPAN   = "two years";               // noun: "over the next two years"
 var COMMIT_RANGE  = "December 2026 – December 2028";
@@ -539,7 +539,7 @@ function mirrorHTML(m){
     '<div class="mtotalbox"><span class="ccop">$</span><span class="mtv">'+plain(c.total)+'</span></div>'+
     '<p class="mtdate">'+esc(COMMIT_RANGE)+'</p></div>'+
   '</div>'+
-  '<p class="mnote">These are the numbers you\u2019d write on your commitment card. One note on the arithmetic: the initiative runs '+COMMIT_MONTHS+' months, not 24 \u2014 December 2026 through December 2028 includes three Decembers. The figures above use the full '+COMMIT_MONTHS+' months, so they\u2019ll be slightly higher than multiplying a year by two.</p>';
+  '<p class="mnote">These are the numbers you\u2019d write on your commitment card.</p>';
 }
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
@@ -690,8 +690,27 @@ function summaryStep(){
   if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
   if(c.stored>0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
 
-  // ── Part one: the picture, adjusted ──────────────────────────────────────
+  // ── Part one: the card first, then the commitment in plain words ─────────
   var out='<section class="card summary">'+stepHead("07","Your summary")+
+    '<p class="cardintro">At Commitment Sunday you\u2019ll be given a card that looks like this. These are your numbers for it \u2014 box for box, in the same order.</p>'+
+    mirrorHTML(m)+
+    '<div class="consideredbox"><p class="ctitle">'+icon("heart",15)+' The commitment you\u2019re considering</p>'+
+    '<div class="sumgrid">'+
+      sl("Current giving to "+CHURCH_NAME+", each month",usd(c.currentMo))+
+      sl("Expanded giving, each month","+ "+usd(c.expandedMo))+
+      sl("Giving to "+CHURCH_NAME+", each month",usd(c.currentMo+c.expandedMo),"first")+
+      sl("Each year",usd(c.annual))+
+      sl("Across the "+COMMIT_MONTHS+" months of "+CARD_INITIATIVE,usd(c.period))+
+      (c.stored>0?sl("One-time gift from stored resources","+ "+usd(c.stored)):"")+
+      sl("Total "+COMMIT_WORDS+" "+CARD_INITIATIVE_SHORT+" commitment",usd(c.total),"strong")+
+    '</div></div>';
+
+  if(!(state.expanded>0||c.stored>0)){
+    out+='<p class="callout calm">You haven\u2019t explored an expanded commitment yet. You can go back to the previous step at any time \u2014 or sit with these numbers first. There\u2019s no hurry.</p>';
+  }
+
+  // ── Part two: the picture, adjusted, for reference ───────────────────────
+  out+='<div class="pagebreak"></div>'+
     '<p class="help">'+(changed
       ? 'A typical month, with the commitment you\u2019re considering.'
       : 'A realistic look at a typical month.')+'</p>'+
@@ -716,26 +735,6 @@ function summaryStep(){
       :state.fund==="retirement"?"comes out of retirement & investing"
       :"comes from trimming extras";
     out+='<p class="sumnote">The arrows show what changed. Your expanded giving of '+usd(state.expanded)+' a month '+fromText+'.</p>';
-  }
-
-  // ── Part two: the commitment, plainly, then the card ─────────────────────
-  if(state.expanded>0||c.stored>0){
-    out+='<div class="pagebreak"></div>'+
-      '<div class="consideredbox"><p class="ctitle">'+icon("heart",15)+' The commitment you\u2019re considering</p>'+
-      '<div class="sumgrid">'+
-        sl("Current giving to "+CHURCH_NAME+", each month",usd(c.currentMo))+
-        sl("Expanded giving, each month","+ "+usd(c.expandedMo))+
-        sl("Giving to "+CHURCH_NAME+", each month",usd(c.currentMo+c.expandedMo),"first")+
-        sl("Each year",usd(c.annual))+
-        sl("Across the "+COMMIT_MONTHS+" months of "+CARD_INITIATIVE,usd(c.period))+
-        (c.stored>0?sl("One-time gift from stored resources","+ "+usd(c.stored)):"")+
-        sl("Total "+COMMIT_WORDS+" "+CARD_INITIATIVE_SHORT+" commitment",usd(c.total),"strong")+
-      '</div>'+
-      '<p class="cardintro">At Commitment Sunday you\u2019ll be given a card that looks like this. These are your numbers for it \u2014 box for box, in the same order.</p>'+
-      mirrorHTML(m)+
-      '</div>';
-  } else {
-    out+='<p class="callout calm">You haven\u2019t explored an expanded commitment yet. You can go back to the previous step at any time \u2014 or sit with these numbers first. There\u2019s no hurry.</p>';
   }
 
   if(inv.length){
