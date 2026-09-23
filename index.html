@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v27)
+  Firstfruits · a stewardship & giving tool  (v32)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -219,6 +219,10 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .sumline.sub span{font-weight:400;color:var(--muted);font-size:13px}
 .sumline span .prev{color:var(--muted);font-weight:400;font-size:13px}
 .sumnote{font-size:12.5px;line-height:1.55;color:var(--muted);margin:-6px 0 18px;padding:0 2px}
+/* Break between the commitment card and the monthly picture on the summary */
+.sectionbreak{border-top:1.5px solid var(--wheat-soft);margin:30px 0 12px;padding-top:24px}
+.subhead{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0;color:var(--ink);letter-spacing:-.01em}
+@media print{.sectionbreak{border-top:0;margin-top:0;padding-top:0}}
 .cardintro{font-size:13.5px;line-height:1.6;color:#3c463f;margin:0 0 12px}
 .consideredbox,.invites{margin-bottom:18px}
 .ctitle{display:flex;align-items:center;gap:7px;font-family:'Fraunces',serif;font-size:15px;color:var(--pine);font-weight:600;margin:0 0 10px}
@@ -681,29 +685,17 @@ function summaryStep(){
   }
 
   var inv=[];
-  if(m.give<=0) inv.push("You haven\u2019t entered any current giving. If that\u2019s a season you\u2019re in, it\u2019s worth naming honestly \u2014 and it may be the very first place to start.");
-  else if(m.giveChurch<=0) inv.push("Right now your giving goes entirely beyond " + CHURCH_NAME + ". That is real generosity and it counts. The commitment card asks about your church in particular, so this is one worth praying through together.");
+  if(m.give>0&&m.giveChurch<=0) inv.push("Right now your giving goes entirely beyond " + CHURCH_NAME + ". That is real generosity and it counts. The commitment card asks about your church in particular, so this is one worth praying through together.");
   if(m.margin<0) inv.push("Your typical month spends a little more than it brings in. Many find it freeing to revisit the extras first, so giving can come from rest rather than strain.");
   if(state.debt) inv.push("With high-interest debt in the picture, it may be worth sitting down with a financial planner. Getting free of it is its own kind of stewardship \u2014 and it doesn\u2019t have to wait on generosity, or generosity on it.");
-  if(m.savingTotal<=0) inv.push("If it fits your season, you may want to consider setting something aside each month \u2014 a cushion is part of stewarding well for years to come.");
   if(state.expanded>0&&state.fund==="savings") inv.push("Slowing savings in order to give is a real, prayerful tradeoff \u2014 neither choice is wrong. Hold it before the Lord and decide together with a settled heart.");
   if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
-  if(c.stored>0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
+  if(c.stored<=0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
 
-  // ── Part one: the card first, then the commitment in plain words ─────────
+  // ── Part one: the commitment card first ───────────────────────────────────
   var out='<section class="card summary">'+stepHead("07","Your summary")+
     '<p class="cardintro">At Commitment Sunday you\u2019ll be given a card that looks like this. These are your numbers for it \u2014 box for box, in the same order.</p>'+
-    mirrorHTML(m)+
-    '<div class="consideredbox"><p class="ctitle">'+icon("heart",15)+' The commitment you\u2019re considering</p>'+
-    '<div class="sumgrid">'+
-      sl("Current giving to "+CHURCH_NAME+", each month",usd(c.currentMo))+
-      sl("Expanded giving, each month","+ "+usd(c.expandedMo))+
-      sl("Giving to "+CHURCH_NAME+", each month",usd(c.currentMo+c.expandedMo),"first")+
-      sl("Each year",usd(c.annual))+
-      sl("Across the "+COMMIT_MONTHS+" months of "+CARD_INITIATIVE,usd(c.period))+
-      (c.stored>0?sl("One-time gift from stored resources","+ "+usd(c.stored)):"")+
-      sl("Total "+COMMIT_WORDS+" "+CARD_INITIATIVE_SHORT+" commitment",usd(c.total),"strong")+
-    '</div></div>';
+    mirrorHTML(m);
 
   if(!(state.expanded>0||c.stored>0)){
     out+='<p class="callout calm">You haven\u2019t explored an expanded commitment yet. You can go back to the previous step at any time \u2014 or sit with these numbers first. There\u2019s no hurry.</p>';
@@ -711,6 +703,7 @@ function summaryStep(){
 
   // ── Part two: the picture, adjusted, for reference ───────────────────────
   out+='<div class="pagebreak"></div>'+
+    '<div class="sectionbreak"><h3 class="subhead">'+(changed?'Your month, with this commitment':'Your month')+'</h3></div>'+
     '<p class="help">'+(changed
       ? 'A typical month, with the commitment you\u2019re considering.'
       : 'A realistic look at a typical month.')+'</p>'+
