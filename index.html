@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v32)
+  Firstfruits · a stewardship & giving tool  (v38)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -157,6 +157,14 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .exlabel{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .exval{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums}
 .permo{font-size:14px;color:var(--muted);margin-left:3px}
+/* The amount itself is typeable. A quiet underline hints at it; the field is sized to its number. */
+.examt{display:inline-flex;align-items:baseline;border-bottom:1px solid var(--line);padding:0 1px;transition:border-color .15s}
+.examt:hover{border-bottom-color:var(--sage)}
+.examt:focus-within{border-bottom-color:var(--pine)}
+.exdollar{font-size:30px}
+.exinput{width:1.1ch;min-width:1.1ch;border:0;outline:0;background:none;padding:0;margin:0;font:inherit;font-size:30px;font-weight:600;color:var(--pine);text-align:right;font-variant-numeric:tabular-nums}
+.exinput::placeholder{color:var(--sage)}
+.exinput:focus-visible{outline:0}
 .exhelp{font-size:12.5px;line-height:1.5;color:var(--muted);margin:0 0 12px}
 .explore input[type=range]{width:100%;accent-color:var(--pine);height:22px}
 
@@ -263,7 +271,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(-
   .mtotal .mtv{font-size:22px;padding:10px 11px}
   .mtotal .mtdate{font-size:12.5px}
 }
-@media (prefers-reduced-motion:reduce){.stage{animation:none}.cta,.minput,.srcbtn{transition:none}}
+@media (prefers-reduced-motion:reduce){.stage{animation:none}.cta,.minput,.srcbtn,.examt{transition:none}}
 @media print{.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;border-color:#ccc}.foot{margin-top:14px}.pagebreak{break-before:page;page-break-before:always}}
 </style>
 </head>
@@ -395,6 +403,13 @@ function computeOutcome(m,fundOverride){
   return {kind:"margin",newMargin:m.margin-amt};
 }
 
+// How much of discretionary spending is being trimmed (0–1).
+function extrasTrim(m){
+  if(m.extrasTotal<=0||state.expanded<=0) return {share:0,level:"none"};
+  var share=Math.min(state.expanded,m.extrasTotal)/m.extrasTotal;
+  var level= share>=1 ? "all" : share>2/3 ? "heavy" : share>=1/3 ? "moderate" : "light";
+  return {share:share,level:level};
+}
 // Which other funding sources would keep the month from going negative?
 function balancedAlternatives(m){
   var opts=[{id:"margin",label:"your margin",room:m.margin},
@@ -403,10 +418,20 @@ function balancedAlternatives(m){
             {id:"extras",label:"extras",room:m.extrasTotal}];
   return opts.filter(function(op){
     if(op.id===state.fund) return false;
+    if(op.id==="extras"&&extrasTrim(m).share>2/3) return false;   // don't suggest trimming most of someone's extras
     var r=computeOutcome(m,op.id);
     return r && r.newMargin>=0 && op.room>0;
   });
 }
+
+// Expanded-giving field: shown with commas, sized to exactly fit its number.
+function exFmt(n){ n=Number(n)||0; return n>0 ? n.toLocaleString("en-US",{maximumFractionDigits:2}) : ""; }
+function exWidth(v){
+  v=String(v||"0");
+  var narrow=(v.match(/[.,]/g)||[]).length;   // commas and points are about a third as wide as a digit
+  return ((v.length-narrow)+narrow*0.35+0.1).toFixed(2)+"ch";
+}
+function sizeEx(el){ el.style.width=exWidth(el.value); }
 
 // ── HTML fragments ────────────────────────────────────────────────────────────
 function stepHead(n,title){ return '<div class="stephead"><span class="stepn">'+n+'</span><h2>'+esc(title)+'</h2></div>'; }
@@ -482,15 +507,19 @@ function considerDynamicHTML(m){
 
   if(o&&o.kind==="savings"&&o.drawn>0){
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on your savings</p>'+
-      '<p>Saving would go from <b>'+usd(m.savingsCash)+'</b> to <b>'+usd(o.newSavings)+'</b> a month \u2014 about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less set aside over the '+esc(COMMIT_WORDS)+' period. The same dollars, redirected. A real tradeoff worth holding prayerfully.</p></div>';
+      '<p>Saving would go from <b>'+usd(m.savingsCash)+'</b> to <b>'+usd(o.newSavings)+'</b> a month \u2014 about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less set aside over the '+esc(COMMIT_WORDS)+' period.</p></div>';
   }
   if(o&&o.kind==="extras"&&o.drawn>0){
+    // Same wording for every trim, whatever its size.
+    var pc=Math.max(1,Math.round(extrasTrim(m).share*100));
+    var art=(/^8/.test(String(pc))||pc===11||pc===18)?"an":"a";   // "an 8%", "an 18%", "a 25%"
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on your extras</p>'+
-      '<p>Discretionary spending would go from <b>'+usd(m.extrasTotal)+'</b> to <b>'+usd(o.newExtras)+'</b> a month. For most households this is where the room actually is \u2014 subscriptions, delivery, the small things that crept up.</p></div>';
+      '<p>Discretionary spending would go from <b>'+usd(m.extrasTotal)+'</b> to <b>'+usd(o.newExtras)+'</b> a month, '+art+' '+pc+'% decrease. '+
+      'Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change, so the commitment you make is one you\u2019ve counted the cost of and can hold with a glad heart.</p></div>';
   }
   if(o&&o.kind==="retirement"&&o.drawn>0){
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on retirement &amp; investing</p>'+
-      '<p>Contributions would go from <b>'+usd(m.retire)+'</b> to <b>'+usd(o.newRetire)+'</b> a month, about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less invested over the '+esc(COMMIT_WORDS)+' period. These dollars are the ones with the longest runway, so this is a heavier lever than the others. Worth weighing carefully, and worth a conversation with a planner if you\u2019re unsure.</p></div>';
+      '<p>Contributions would go from <b>'+usd(m.retire)+'</b> to <b>'+usd(o.newRetire)+'</b> a month \u2014 about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less set aside over the '+esc(COMMIT_WORDS)+' period.</p></div>';
   }
   if(o&&o.overflow>0){
     var src=o.kind==="savings"?"savings":o.kind==="retirement"?"retirement contributions":"extras";
@@ -631,16 +660,19 @@ function pictureStep(){
 }
 function considerStep(){
   var m=computeM();
-  var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);
+  var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);   // slider reaches 25% of take-home; typing has no ceiling
   return '<section class="card">'+stepHead("06","Consider "+INITIATIVE_NAME)+
     verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
     '<p class="help">What would it look like to acknowledge God first in your finances over the next '+esc(COMMIT_SPAN)+'? This step is about your giving to '+esc(CHURCH_NAME)+' \u2014 start from what you already give there, then explore what expanding it could look like. This will look different for everyone.</p>'+
 
     carriedHTML(m)+
 
-    '<div class="explore"><div class="exprow"><span class="exlabel">Expanded giving</span><span class="exval"><span id="exval">'+usd(state.expanded)+'</span><span class="permo">/mo</span></span></div>'+
+    '<div class="explore"><div class="exprow"><label class="exlabel" for="exinput">Expanded giving</label>'+
+    '<span class="exval"><span class="examt"><span class="exdollar">$</span>'+
+    '<input id="exinput" class="moneyinput exinput" inputmode="decimal" placeholder="0" data-field="expandedTyped" value="'+escA(exFmt(state.expanded))+'" style="width:'+exWidth(exFmt(state.expanded))+'" aria-label="Expanded monthly giving amount"></span>'+
+    '<span class="permo">/mo</span></span></div>'+
     '<p class="exhelp">On top of what you already give to '+esc(CHURCH_NAME)+'.</p>'+
-    '<input type="range" min="0" max="'+maxSlider+'" step="25" value="'+Math.min(state.expanded,maxSlider)+'" data-field="expanded" aria-label="Expanded monthly giving to explore"></div>'+
+    '<input type="range" min="0" max="'+maxSlider+'" step="25" value="'+Math.min(state.expanded,maxSlider)+'" data-field="expanded" id="exrange" aria-label="Expanded monthly giving to explore"></div>'+
 
     '<div id="considerDynamic">'+considerDynamicHTML(m)+'</div>'+
 
@@ -689,6 +721,7 @@ function summaryStep(){
   if(m.margin<0) inv.push("Your typical month spends a little more than it brings in. Many find it freeing to revisit the extras first, so giving can come from rest rather than strain.");
   if(state.debt) inv.push("With high-interest debt in the picture, it may be worth sitting down with a financial planner. Getting free of it is its own kind of stewardship \u2014 and it doesn\u2019t have to wait on generosity, or generosity on it.");
   if(state.expanded>0&&state.fund==="savings") inv.push("Slowing savings in order to give is a real, prayerful tradeoff \u2014 neither choice is wrong. Hold it before the Lord and decide together with a settled heart.");
+  if(state.expanded>0&&state.fund==="extras") inv.push("Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change, so the commitment you make is one you\u2019ve counted the cost of and can hold with a glad heart.");
   if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
   if(c.stored<=0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
 
@@ -705,7 +738,7 @@ function summaryStep(){
   out+='<div class="pagebreak"></div>'+
     '<div class="sectionbreak"><h3 class="subhead">'+(changed?'Your month, with this commitment':'Your month')+'</h3></div>'+
     '<p class="help">'+(changed
-      ? 'A typical month, with the commitment you\u2019re considering.'
+      ? 'A realistic month, with the commitment you\u2019re considering.'
       : 'A realistic look at a typical month.')+'</p>'+
     '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(adj.income)+'</span></div>'+
     '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(adj.margin)+'</span></div></div>'+
@@ -791,7 +824,9 @@ function doReset(){
 }
 function refreshConsider(){
   var m=computeM();
-  var ev=document.getElementById("exval"); if(ev) ev.textContent=usd(state.expanded);
+  // Don't rewrite the typed field while someone is typing in it.
+  var ei=document.getElementById("exinput"); if(ei){ if(document.activeElement!==ei) ei.value=exFmt(state.expanded); sizeEx(ei); }
+  var er=document.getElementById("exrange"); if(er&&document.activeElement!==er) er.value=Math.min(state.expanded,num(er.max));
   var cd=document.getElementById("considerDynamic"); if(cd) cd.innerHTML=considerDynamicHTML(m);
 }
 
@@ -822,6 +857,16 @@ $app.addEventListener("input",function(e){
   else if(f==="savings"){ state.savings=t.value; }
   else if(f==="retirement"){ state.retirement=t.value; }
   else if(f==="stored"){ state.stored=t.value; }
+  else if(f==="expandedTyped"){ state.expanded=num(t.value); refreshConsider(); }
+});
+
+$app.addEventListener("focusin",function(e){
+  var t=e.target; if(t.id!=="exinput") return;
+  t.value=state.expanded>0?String(state.expanded):""; sizeEx(t);
+});
+$app.addEventListener("focusout",function(e){
+  var t=e.target; if(t.id!=="exinput") return;
+  t.value=exFmt(state.expanded); sizeEx(t);
 });
 
 // ── Boot ────────────────────────────────────────────────────────────────────────
