@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v38)
+  Firstfruits · a stewardship & giving tool  (v39)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -738,7 +738,7 @@ function summaryStep(){
   out+='<div class="pagebreak"></div>'+
     '<div class="sectionbreak"><h3 class="subhead">'+(changed?'Your month, with this commitment':'Your month')+'</h3></div>'+
     '<p class="help">'+(changed
-      ? 'A realistic month, with the commitment you\u2019re considering.'
+      ? 'A typical month, with the commitment you\u2019re considering.'
       : 'A realistic look at a typical month.')+'</p>'+
     '<div class="bignum"><div><span class="bl">Take-home</span><span class="bv">'+usd(adj.income)+'</span></div>'+
     '<div class="'+(deficit?"neg":"")+'"><span class="bl">'+(deficit?"Over budget":"Margin")+'</span><span class="bv">'+signed(adj.margin)+'</span></div></div>'+
