@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v45)
+  Firstfruits · a stewardship & giving tool  (v46)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -35,7 +35,7 @@ body{
   background:radial-gradient(120% 80% at 50% -10%, #EFEADF 0%, var(--bg) 55%) fixed;
   -webkit-font-smoothing:antialiased;
 }
-.shell{max-width:580px;margin:0 auto;padding:18px 16px 40px}
+.shell{max-width:580px;margin:0 auto;padding:18px 16px 40px;overflow-x:hidden;overflow-x:clip}
 
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 14px}
 .brand{display:flex;align-items:center;gap:11px}
@@ -48,10 +48,10 @@ body{
 .reset:hover{color:var(--ink)}
 
 .thread{display:flex;gap:4px;margin-bottom:16px}
-.tick{flex:1;background:none;border:0;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;opacity:.55;text-align:left}
+.tick{flex:1 1 0;min-width:0;background:none;border:0;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;opacity:.55;text-align:left}
 .tick:disabled{cursor:default}
 .tick .dot{height:4px;width:100%;border-radius:99px;background:var(--line)}
-.tick .lbl{font-size:10px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.tick .lbl{font-size:10px;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tick.on{opacity:1}.tick.done{opacity:.9}
 .tick.on .dot,.tick.done .dot{background:var(--pine)}
 .tick.on .lbl{color:var(--pine);font-weight:600}
@@ -85,11 +85,11 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .minput{display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;background:#fff;overflow:hidden;transition:border-color .15s,box-shadow .15s}
 .minput:focus-within{border-color:var(--pine);box-shadow:0 0 0 3px rgba(44,74,64,.12)}
 .dollar{padding:0 4px 0 13px;color:var(--muted);font-size:15px}
-.minput input{flex:1;border:0;outline:0;background:none;font:inherit;font-size:16px;padding:11px 13px 11px 2px;color:var(--ink);font-variant-numeric:tabular-nums}
+.minput input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;font-size:16px;padding:11px 13px 11px 2px;color:var(--ink);font-variant-numeric:tabular-nums}
 
-/* min-width:0 stops a fieldset from growing to fit its widest child, which pushed the boxes past the card edge on phones */
-.group{border:0;padding:0;margin:0 0 18px;min-width:0}
-.group legend{display:flex;align-items:baseline;gap:8px;padding:0;margin-bottom:11px}
+/* These boxes used to be <fieldset>s, which phone browsers size to their widest child and so pushed past the card edge. Plain divs just fit their container. */
+.group{border:0;padding:0;margin:0 0 18px;min-width:0;max-width:100%}
+.group .grouplegend{display:flex;align-items:baseline;gap:8px;padding:0;margin-bottom:11px}
 .group .gt{font-family:'Fraunces',serif;font-size:16px;color:var(--pine);font-weight:600}
 .group .gn{font-size:12px;color:var(--muted)}
 .gbody{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:14px;min-width:0}
@@ -98,7 +98,7 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 
 /* Current giving gets its own weight — it is not one of three equal boxes */
 .givingfirst{background:#EEF3F2;border:1px solid #CFE1DE;border-left:4px solid var(--teal);border-radius:14px;padding:18px;margin-bottom:22px}
-.givingfirst legend{margin-bottom:9px}
+.givingfirst .grouplegend{margin-bottom:9px}
 .givingfirst .gt{color:var(--teal-deep);font-size:17px}
 .givingfirst .gbody{background:#fff;border-color:#D6E4E2}
 .subfield+.subfield{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
@@ -255,6 +255,8 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:4px}
 
 @media (max-width:440px){
+  .tick .lbl{font-size:9px;letter-spacing:0}
+  .tick.on{flex-grow:1.8}
   h1{font-size:25px}
   .card{padding:24px 18px}
   .ratios{grid-template-columns:repeat(2,1fr)}
@@ -634,10 +636,10 @@ function incomeStep(){
 function spendingStep(){
   return '<section class="card">'+stepHead("03","Where it goes")+
     '<p class="help">Edit, remove, or add lines so this matches your real life. Include only what leaves your account after payday. Leave blanks where they don\u2019t apply.</p>'+
-    '<fieldset class="group"><legend><span class="gt">Needs</span><span class="gn">The essentials</span></legend><div class="gbody">'+
+    '<div role="group" class="group"><div class="grouplegend"><span class="gt">Needs</span><span class="gn">The essentials</span></div><div class="gbody">'+
     '<p class="grouphelp">If your health, dental, or life insurance comes out of your paycheck before you see it, leave it out. It\u2019s already reflected in your take-home pay. Insurance you pay yourself, like auto or homeowners, belongs here.</p>'+
-    lineItemsHTML("need",state.needs,"Add a need")+'</div></fieldset>'+
-    '<fieldset class="group"><legend><span class="gt">Extras</span><span class="gn">Things you enjoy but can live without</span></legend><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></fieldset>'+
+    lineItemsHTML("need",state.needs,"Add a need")+'</div></div>'+
+    '<div role="group" class="group"><div class="grouplegend"><span class="gt">Extras</span><span class="gn">Things you enjoy but can live without</span></div><div class="gbody">'+lineItemsHTML("extra",state.extras,"Add an extra")+'</div></div>'+
     '<label class="check"><input type="checkbox" data-field="debt"'+(state.debt?" checked":"")+'> <span>We carry high-interest debt (like credit cards or payday loans).</span></label>'+
     navHTML(2,4,"Next: saving",null,false)+
   '</section>';
@@ -647,7 +649,7 @@ function givingStep(){
     verseHTML("Proverbs 3:9","Honor the LORD with your wealth and with the firstfruits of all your produce.")+
     '<p class="help">Let\u2019s start with what you already give. Everything else comes after that.</p>'+
 
-    '<fieldset class="group givingfirst"><legend><span class="gt">Current giving</span><span class="gn">In a typical month</span></legend><div class="gbody">'+
+    '<div role="group" class="group givingfirst"><div class="grouplegend"><span class="gt">Current giving</span><span class="gn">In a typical month</span></div><div class="gbody">'+
     '<div class="subfield">'+
     moneyFieldHTML("givingChurch","To "+CHURCH_NAME,state.givingChurch)+
     '<p class="fieldhelp">Everything that goes to '+esc(CHURCH_NAME)+': regular giving, plus things like camp scholarships or Compassion sponsorships.</p>'+
@@ -657,7 +659,7 @@ function givingStep(){
     moneyFieldHTML("givingOther","Beyond our church",state.givingOther)+
     '<p class="fieldhelp">Everything else you give: other nonprofits, missionaries, ministries, Christian schools, and any other charitable giving.</p>'+
     '</div>'+
-    '</div></fieldset>'+
+    '</div></div>'+
 
     navHTML(1,3,"Next: spending",null,false)+
   '</section>';
@@ -666,15 +668,15 @@ function savingStep(){
   return '<section class="card">'+stepHead("04","Setting aside on purpose")+
     '<p class="help">The rest of what you direct on purpose rather than spend. Giving is already named, so this is everything else.</p>'+
 
-    '<fieldset class="group"><legend><span class="gt">Savings</span><span class="gn">Cash you set aside</span></legend><div class="gbody">'+
+    '<div role="group" class="group"><div class="grouplegend"><span class="gt">Savings</span><span class="gn">Cash you set aside</span></div><div class="gbody">'+
     moneyFieldHTML("savings","Savings each month",state.savings)+
     '<p class="fieldhelp">Emergency fund, general savings, money set aside for a down payment, a car, home repairs, or travel. Also any extra debt payments above the minimum.</p>'+
-    '</div></fieldset>'+
+    '</div></div>'+
 
-    '<fieldset class="group"><legend><span class="gt">Retirement &amp; investing</span><span class="gn">After your paycheck lands</span></legend><div class="gbody">'+
+    '<div role="group" class="group"><div class="grouplegend"><span class="gt">Retirement &amp; investing</span><span class="gn">After your paycheck lands</span></div><div class="gbody">'+
     moneyFieldHTML("retirement","Retirement & investing each month",state.retirement)+
     '<p class="fieldhelp">Roth IRA, brokerage, 529, or HSA contributions you make yourself after your paycheck arrives. Don\u2019t include anything withheld from your paycheck, like a workplace 401(k), payroll HSA, or insurance. That\u2019s already accounted for in your take-home pay.</p>'+
-    '</div></fieldset>'+
+    '</div></div>'+
 
     navHTML(3,5,"See your picture",null,false)+
   '</section>';
