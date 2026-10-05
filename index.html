@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v43)
+  Firstfruits · a stewardship & giving tool  (v44)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -750,7 +750,6 @@ function summaryStep(){
 
   var inv=[];
   if(m.give>0&&m.giveChurch<=0) inv.push("Right now your giving goes entirely beyond " + CHURCH_NAME + ". That is real generosity and it counts. The commitment card asks about your church in particular, so this is one worth praying through together.");
-  if(m.margin<0) inv.push("Your typical month spends a little more than it brings in. Many find it freeing to revisit the extras first, so giving can come from rest rather than strain.");
   if(state.debt) inv.push("With high-interest debt in the picture, it may be worth sitting down with a financial planner. Getting free of it is its own kind of stewardship \u2014 and it doesn\u2019t have to wait on generosity, or generosity on it.");
   if(state.expanded>0&&state.fund==="savings") inv.push("Slowing savings in order to give is a real, prayerful tradeoff \u2014 neither choice is wrong. Hold it before the Lord and decide together with a settled heart.");
   if(state.expanded>0&&state.fund==="extras") inv.push("Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change.");
