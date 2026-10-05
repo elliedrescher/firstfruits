@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v44)
+  Firstfruits · a stewardship & giving tool  (v45)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -87,11 +87,12 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .dollar{padding:0 4px 0 13px;color:var(--muted);font-size:15px}
 .minput input{flex:1;border:0;outline:0;background:none;font:inherit;font-size:16px;padding:11px 13px 11px 2px;color:var(--ink);font-variant-numeric:tabular-nums}
 
-.group{border:0;padding:0;margin:0 0 18px}
+/* min-width:0 stops a fieldset from growing to fit its widest child, which pushed the boxes past the card edge on phones */
+.group{border:0;padding:0;margin:0 0 18px;min-width:0}
 .group legend{display:flex;align-items:baseline;gap:8px;padding:0;margin-bottom:11px}
 .group .gt{font-family:'Fraunces',serif;font-size:16px;color:var(--pine);font-weight:600}
 .group .gn{font-size:12px;color:var(--muted)}
-.gbody{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:14px}
+.gbody{background:#FAF7EE;border:1px solid var(--line);border-radius:13px;padding:14px;min-width:0}
 .fieldhelp{font-size:12.5px;line-height:1.55;color:var(--muted);margin:8px 0 0}
 .grouphelp{font-size:12.5px;line-height:1.55;color:var(--muted);margin:0 0 12px;padding-bottom:11px;border-bottom:1px solid var(--line)}
 
@@ -103,7 +104,7 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .subfield+.subfield{margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
 
 .lines{display:flex;flex-direction:column;gap:8px}
-.line{display:flex;align-items:center;gap:8px}
+.line{display:flex;align-items:center;gap:8px;min-width:0}
 .lname{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;font:inherit;font-size:14px;padding:10px 11px;color:var(--ink);outline:0}
 .lname:focus{border-color:var(--pine);box-shadow:0 0 0 3px rgba(44,74,64,.1)}
 .lmoney{display:flex;align-items:center;width:118px;border:1px solid var(--line);border-radius:9px;background:#fff;overflow:hidden}
