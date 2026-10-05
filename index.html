@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v41)
+  Firstfruits · a stewardship & giving tool  (v43)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -167,6 +167,7 @@ h2{font-family:'Fraunces',serif;font-weight:500;font-size:23px;margin:0;color:va
 .exinput:focus-visible{outline:0}
 .exhelp{font-size:12.5px;line-height:1.5;color:var(--muted);margin:0 0 12px}
 .explore input[type=range]{width:100%;accent-color:var(--pine);height:22px}
+.exhint{font-size:12px;color:var(--muted);margin:6px 0 0}
 
 .srclabel{font-size:13px;color:var(--muted);margin:0 0 9px}
 .source{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
@@ -304,6 +305,16 @@ var COMMIT_RANGE  = "December 2026 – December 2028";
 var CARD_INITIATIVE       = "the FIRST initiative";
 var CARD_INITIATIVE_SHORT = "FIRST";
 
+// —— The expanded-giving slider ———————————————————————————————————————
+//  The slider follows the lowest and highest monthly levels on the church's
+//  gift chart. It has no ceiling tied to a household's income, so its right
+//  edge never reads as a suggested amount. A short runway at the left lets
+//  anyone choose less than the chart's lowest level without the thumb moving much.
+//  Typing any amount always works, whatever the slider shows.
+var GIFT_SCALE_LOW  = 104;      // lowest monthly level on the gift chart
+var GIFT_SCALE_HIGH = 208333;   // highest monthly level on the gift chart
+var SLIDER_RUNWAY   = 40;       // of the slider's 1,000 positions, how many are given to $0 up to the lowest level
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  End of settings.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -424,6 +435,27 @@ function balancedAlternatives(m){
   });
 }
 
+// Slider position (0–1000) <-> monthly amount.
+//  0 to SLIDER_RUNWAY : a short even runway from $0 to the chart's lowest level, in $10 steps.
+//  After that         : each equal stretch of track multiplies the amount by the same factor,
+//                       running from the lowest to the highest level on the chart.
+function sliderToAmt(t){
+  t=Math.max(0,Math.min(1000,Number(t)||0));
+  if(t<SLIDER_RUNWAY) return Math.min(GIFT_SCALE_LOW,Math.round(GIFT_SCALE_LOW*t/SLIDER_RUNWAY/10)*10);
+  if(t===SLIDER_RUNWAY) return GIFT_SCALE_LOW;
+  if(t>=1000) return GIFT_SCALE_HIGH;
+  var raw=GIFT_SCALE_LOW*Math.pow(GIFT_SCALE_HIGH/GIFT_SCALE_LOW,(t-SLIDER_RUNWAY)/(1000-SLIDER_RUNWAY));
+  var step=raw<1000?25:raw<10000?100:500;
+  return Math.max(GIFT_SCALE_LOW,Math.min(GIFT_SCALE_HIGH,Math.round(raw/step)*step));
+}
+function amtToSlider(a){
+  a=Number(a)||0;
+  if(a<=0) return 0;
+  if(a<=GIFT_SCALE_LOW) return Math.round(a/GIFT_SCALE_LOW*SLIDER_RUNWAY);
+  if(a>=GIFT_SCALE_HIGH) return 1000;
+  return Math.round(SLIDER_RUNWAY+(1000-SLIDER_RUNWAY)*Math.log(a/GIFT_SCALE_LOW)/Math.log(GIFT_SCALE_HIGH/GIFT_SCALE_LOW));
+}
+
 // Expanded-giving field: shown with commas, sized to exactly fit its number.
 function exFmt(n){ n=Number(n)||0; return n>0 ? n.toLocaleString("en-US",{maximumFractionDigits:2}) : ""; }
 function exWidth(v){
@@ -521,7 +553,9 @@ function considerDynamicHTML(m){
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on retirement &amp; investing</p>'+
       '<p>Contributions would go from <b>'+usd(m.retire)+'</b> to <b>'+usd(o.newRetire)+'</b> a month \u2014 about <b>'+usd(o.drawn*COMMIT_MONTHS)+'</b> less set aside over the '+esc(COMMIT_WORDS)+' period.</p></div>';
   }
-  if(o&&o.overflow>0){
+  // The "comes from your margin" note only shows when the margin can actually cover the overflow.
+  // If it can't, the red warning below says so, and this note would contradict it.
+  if(o&&o.overflow>0&&o.newMargin>=0){
     var src=o.kind==="savings"?"savings":o.kind==="retirement"?"retirement contributions":"extras";
     out+='<p class="callout calm">This is more than your current '+src+', so '+usd(o.overflow)+'/mo would also come from your margin.</p>';
   }
@@ -658,7 +692,6 @@ function pictureStep(){
 }
 function considerStep(){
   var m=computeM();
-  var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);   // slider reaches 25% of take-home; typing has no ceiling
   return '<section class="card">'+stepHead("06","Consider "+INITIATIVE_NAME)+
     verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
     '<p class="help">What would it look like to acknowledge God first in your finances over the next '+esc(COMMIT_SPAN)+'? This step is about your giving to '+esc(CHURCH_NAME)+' \u2014 start from what you already give there, then explore what expanding it could look like.</p>'+
@@ -670,7 +703,8 @@ function considerStep(){
     '<input id="exinput" class="moneyinput exinput" inputmode="decimal" placeholder="0" data-field="expandedTyped" value="'+escA(exFmt(state.expanded))+'" style="width:'+exWidth(exFmt(state.expanded))+'" aria-label="Expanded monthly giving amount"></span>'+
     '<span class="permo">/mo</span></span></div>'+
     '<p class="exhelp">On top of what you already give to '+esc(CHURCH_NAME)+'.</p>'+
-    '<input type="range" min="0" max="'+maxSlider+'" step="25" value="'+Math.min(state.expanded,maxSlider)+'" data-field="expanded" id="exrange" aria-label="Expanded monthly giving to explore"></div>'+
+    '<input type="range" min="0" max="1000" step="1" value="'+amtToSlider(state.expanded)+'" data-field="expanded" id="exrange" aria-label="Expanded monthly giving to explore" aria-valuetext="'+escA(usd(state.expanded)+' per month')+'">'+
+    '<p class="exhint">Drag the slider, or type any amount above.</p></div>'+
 
     '<div id="considerDynamic">'+considerDynamicHTML(m)+'</div>'+
 
@@ -824,7 +858,7 @@ function refreshConsider(){
   var m=computeM();
   // Don't rewrite the typed field while someone is typing in it.
   var ei=document.getElementById("exinput"); if(ei){ if(document.activeElement!==ei) ei.value=exFmt(state.expanded); sizeEx(ei); }
-  var er=document.getElementById("exrange"); if(er&&document.activeElement!==er) er.value=Math.min(state.expanded,num(er.max));
+  var er=document.getElementById("exrange"); if(er){ if(document.activeElement!==er) er.value=amtToSlider(state.expanded); er.setAttribute("aria-valuetext",usd(state.expanded)+" per month"); }
   var cd=document.getElementById("considerDynamic"); if(cd) cd.innerHTML=considerDynamicHTML(m);
 }
 
@@ -842,7 +876,7 @@ $app.addEventListener("click",function(e){
 
 $app.addEventListener("input",function(e){
   var t=e.target, f=t.getAttribute("data-field"); if(!f) return;
-  if(f==="expanded"){ state.expanded=num(t.value); refreshConsider(); return; }
+  if(f==="expanded"){ state.expanded=sliderToAmt(t.value); refreshConsider(); return; }
   if(f==="debt"){ state.debt=t.checked; return; }
   if(t.classList.contains("moneyinput")){ var v=t.value.replace(/[^0-9.]/g,""); if(v!==t.value) t.value=v; }
   if(f==="line"){
