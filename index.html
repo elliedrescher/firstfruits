@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Firstfruits · a stewardship & giving tool  (v39)
+  Firstfruits · a stewardship & giving tool  (v41)
   ────────────────────────────────────────────
   A single self-contained file. No build step, no dependencies, no server.
   Open it in any browser, or host it anywhere static.
@@ -515,7 +515,7 @@ function considerDynamicHTML(m){
     var art=(/^8/.test(String(pc))||pc===11||pc===18)?"an":"a";   // "an 8%", "an 18%", "a 25%"
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on your extras</p>'+
       '<p>Discretionary spending would go from <b>'+usd(m.extrasTotal)+'</b> to <b>'+usd(o.newExtras)+'</b> a month, '+art+' '+pc+'% decrease. '+
-      'Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change, so the commitment you make is one you\u2019ve counted the cost of and can hold with a glad heart.</p></div>';
+      'Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change.</p></div>';
   }
   if(o&&o.kind==="retirement"&&o.drawn>0){
     out+='<div class="tradeoff"><p class="ttitle">'+icon("target",15)+' Effect on retirement &amp; investing</p>'+
@@ -527,7 +527,7 @@ function considerDynamicHTML(m){
   }
   if(o&&o.newMargin<0){
     var alts=balancedAlternatives(m);
-    out+='<p class="callout warn">At this level a typical month spends more than it brings in. That doesn\u2019t make it wrong, but it\u2019s worth seeing plainly.';
+    out+='<p class="callout warn">At this level a typical month spends more than it brings in.';
     if(alts.length){
       var rooms=alts.map(function(a){ return usd(a.room)+"/mo in "+a.label; });
       var roomText=rooms.length>1 ? rooms.slice(0,-1).join(", ")+" and "+rooms[rooms.length-1] : rooms[0];
@@ -582,8 +582,8 @@ function welcomeStep(){
     '<h1>A clear, honest look at your household finances.</h1>'+
     '<svg class="underline" viewBox="0 0 240 14" fill="none" aria-hidden="true" preserveAspectRatio="none"><path d="M4 9 C 46 3, 92 12, 138 7 C 176 3, 210 10, 236 6" stroke="var(--wheat)" stroke-width="3.4" stroke-linecap="round"/></svg>'+
     verseHTML("Proverbs 27:23","Know well the condition of your flocks, and give attention to your herds.")+
-    '<p class="lede">This tool maps your money line by line so you can see the whole picture, then weigh a giving commitment freely and with a clear heart. It ends with the numbers you\u2019d write on your commitment card.</p>'+
-    '<ul class="reassure"><li>'+icon("check",15)+' Add your own categories and amounts</li><li>'+icon("check",15)+' Nothing is saved or shared</li><li>'+icon("check",15)+' No number is ever decided for you</li></ul>'+
+    '<p class="lede">This tool helps you take an honest look at your finances, consider what it means to acknowledge Jesus first, and prayerfully discern your '+esc(CARD_INITIATIVE_SHORT)+' commitment. It ends with the numbers you\u2019ll write on your commitment card.</p>'+
+    '<ul class="reassure"><li>'+icon("check",15)+' Add your own categories and amounts</li><li>'+icon("check",15)+' Nothing is saved or shared</li></ul>'+
     '<button class="cta" data-action="go" data-step="1">Begin '+icon("chevR",18)+'</button>'+
   '</section>';
 }
@@ -613,8 +613,6 @@ function givingStep(){
     '<p class="help">Let\u2019s start with what you already give. Everything else comes after that.</p>'+
 
     '<fieldset class="group givingfirst"><legend><span class="gt">Current giving</span><span class="gn">In a typical month</span></legend><div class="gbody">'+
-    '<p class="grouphelp">All of it is giving to God\u2019s kingdom. The split is so that we can focus in on the giving that goes to Biltmore.</p>'+
-
     '<div class="subfield">'+
     moneyFieldHTML("givingChurch","To "+CHURCH_NAME,state.givingChurch)+
     '<p class="fieldhelp">Everything that goes to '+esc(CHURCH_NAME)+': regular giving, plus things like camp scholarships or Compassion sponsorships.</p>'+
@@ -663,7 +661,7 @@ function considerStep(){
   var maxSlider=Math.max(Math.round((m.income*0.25)/25)*25,500);   // slider reaches 25% of take-home; typing has no ceiling
   return '<section class="card">'+stepHead("06","Consider "+INITIATIVE_NAME)+
     verseHTML("2 Corinthians 9:7","Each one must give as he has decided in his heart, not reluctantly or under compulsion, for God loves a cheerful giver.")+
-    '<p class="help">What would it look like to acknowledge God first in your finances over the next '+esc(COMMIT_SPAN)+'? This step is about your giving to '+esc(CHURCH_NAME)+' \u2014 start from what you already give there, then explore what expanding it could look like. This will look different for everyone.</p>'+
+    '<p class="help">What would it look like to acknowledge God first in your finances over the next '+esc(COMMIT_SPAN)+'? This step is about your giving to '+esc(CHURCH_NAME)+' \u2014 start from what you already give there, then explore what expanding it could look like.</p>'+
 
     carriedHTML(m)+
 
@@ -721,7 +719,7 @@ function summaryStep(){
   if(m.margin<0) inv.push("Your typical month spends a little more than it brings in. Many find it freeing to revisit the extras first, so giving can come from rest rather than strain.");
   if(state.debt) inv.push("With high-interest debt in the picture, it may be worth sitting down with a financial planner. Getting free of it is its own kind of stewardship \u2014 and it doesn\u2019t have to wait on generosity, or generosity on it.");
   if(state.expanded>0&&state.fund==="savings") inv.push("Slowing savings in order to give is a real, prayerful tradeoff \u2014 neither choice is wrong. Hold it before the Lord and decide together with a settled heart.");
-  if(state.expanded>0&&state.fund==="extras") inv.push("Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change, so the commitment you make is one you\u2019ve counted the cost of and can hold with a glad heart.");
+  if(state.expanded>0&&state.fund==="extras") inv.push("Trimming extras in order to give is a meaningful sacrifice. It may help to sit down and name the specific lines you\u2019d change.");
   if(state.expanded>0&&state.fund==="retirement") inv.push("Redirecting retirement or investing dollars is a real, prayerful tradeoff, and a heavier one than it may look, since those dollars have the longest time to grow. Neither choice is wrong. It may be worth talking it through with a planner as well as praying it through together.");
   if(c.stored<=0) inv.push("A gift from stored resources is often the piece people haven\u2019t considered before. It may be worth a conversation with the church about how a gift like that is best made.");
 
